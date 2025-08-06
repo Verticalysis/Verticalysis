@@ -10,11 +10,31 @@ abstract class Filter<T extends Comparable> {
 
   final String attribute;
 
+  List<int> filter(
+    Iterable<int> index,
+    List<V?> getTypedView<V extends Comparable>(String name)
+  );
+
   bool Function(T? val) get predicate;
   String get label;
 }
 
-final class EqualityFilter<T extends Comparable> extends Filter<T> {
+mixin SingleAttributeFilter<T extends Comparable> implements Filter<T> {
+  bool Function(T? val) get predicate;
+  String get attribute;
+
+  @override
+  List<int> filter(
+    Iterable<int> index,
+    List<V?> getTypedView<V extends Comparable>(String name)
+  ) {
+    final view = getTypedView<T>(attribute);
+    return index.where((i) => predicate(view[i])).toList();
+  }
+}
+
+final class EqualityFilter<T extends Comparable>
+  extends Filter<T> with SingleAttributeFilter<T> {
   EqualityFilter(super.attribute, T lhs): predicate = (
     (rhs) => lhs == rhs
   ), label = "$attribute: $lhs";
@@ -30,7 +50,8 @@ final class EqualityFilter<T extends Comparable> extends Filter<T> {
   final String label;
 }
 
-final class MemberOfFilter<T extends Comparable> extends Filter<T> {
+final class MemberOfFilter<T extends Comparable>
+  extends Filter<T> with SingleAttributeFilter<T> {
   MemberOfFilter(super.attribute, List<T> set): predicate = (
     (val) => set.contains(val)
   ), label = "$attribute∈ {${set.join(" ")}}";
@@ -42,7 +63,8 @@ final class MemberOfFilter<T extends Comparable> extends Filter<T> {
   final String label;
 }
 
-final class IntervalFilter<T extends Comparable> extends Filter<T> {
+final class IntervalFilter<T extends Comparable>
+  extends Filter<T> with SingleAttributeFilter<T> {
   IntervalFilter(super.attribute, T min, T max, [
     bool linclusive = true, bool rinclusive = false
   ]): predicate = switch((linclusive, rinclusive)) {
@@ -80,7 +102,8 @@ final class IntervalFilter<T extends Comparable> extends Filter<T> {
   final String label;
 }
 
-final class LessThanFilter<T extends Comparable> extends Filter<T> {
+final class LessThanFilter<T extends Comparable>
+  extends Filter<T> with SingleAttributeFilter<T> {
   LessThanFilter(super.attribute, T max, bool inclusive): predicate = (
     inclusive ? (val) => val != null && val <= max
       : (val) => val != null && val < max
@@ -101,7 +124,8 @@ final class LessThanFilter<T extends Comparable> extends Filter<T> {
   final String label;
 }
 
-final class GreaterThanFilter<T extends Comparable> extends Filter<T> {
+final class GreaterThanFilter<T extends Comparable>
+  extends Filter<T> with SingleAttributeFilter<T> {
   GreaterThanFilter(super.attribute, T min, bool inclusive): predicate = (
     inclusive ? (val) => val != null && val >= min
       : (val) => val != null && val > min

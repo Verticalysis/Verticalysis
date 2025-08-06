@@ -12,6 +12,8 @@ import 'SparseVector.dart';
 typedef GenericColumn = SparseVector<Comparable?>;
 typedef TypedColumn<T extends Comparable> = SparseVector<T?>;
 
+typedef ColumnSelector = List<T?> Function<T extends Comparable>(String _);
+
 final class AttributeNotFoundException implements Exception {
   AttributeNotFoundException(this.attribute);
   final String attribute;
@@ -86,21 +88,21 @@ class Projection {
   /// Reverse the order of entries in this projection
   void reverse() => _index = _index.reversed;
 
-  /// Create a new [Projection] with entries filtered by [pred]
-  ///
-  /// [attribute] designates which attribute the [pred] is applied on
-  Projection where<T>(String attribute, bool pred(T? val)) {
-    final col = _getColumnOfType<T>(attribute);
+  /// Create a new [Projection] with entries filtered by [filter]
+  Projection where(List<int> filter(
+    Iterable<int> index,
+    ColumnSelector getTypedView
+  )) {
     final index = ListIndex([], _index.name);
     final res = Projection(_columns, index, [ index ]);
-    onChange = (prevSize) => res.notify(ListIndex(SkippedIndex(
+    onChange = (prevSize) => res.notify(ListIndex(filter(SkippedIndex(
       _index, prevSize
-    ).where((i) => pred(col[i])), _index.name));
+    ), _getColumnOfType), _index.name));
     onChange(0);
     return res;
   }
 
-  Iterable<int> search<T>(String attribute, T val) sync* {
+  Iterable<int> search<T extends Comparable>(String attribute, T val) sync* {
     final col = _getColumnOfType<T>(attribute);
     for(int i = 0; i != _index.length; ++i) if(
       col[_index[i]] == val
@@ -131,7 +133,9 @@ class Projection {
     return res;
   }
 
-  SparseVector<T?> _getColumnOfType<T>(String name) => switch(_columns[name]) {
+  SparseVector<T?> _getColumnOfType<T extends Comparable>(
+    String name
+  ) => switch(_columns[name]) {
     SparseVector<T?> col => col,
     null => throw AttributeNotFoundException(name),
     _ => throw TypeError()

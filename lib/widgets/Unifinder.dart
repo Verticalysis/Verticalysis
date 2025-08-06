@@ -291,14 +291,6 @@ final class TagsEditingController extends TextEditingController {
 
   final FiltersModel _filters;
 
-  /*bool _tagEditMode = false;
-
-  set tagEditMode(bool enable) {
-    _tagEditMode = enable;
-    notifyListeners();
-  }*/
-
-
   void clear() => _filters.clear();
 
   @override

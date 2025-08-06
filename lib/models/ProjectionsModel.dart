@@ -49,10 +49,8 @@ final class ProjectionsModel extends ChangeNotifier {
   }
 
   /// Push a projection created with the filter corresponding to [pred]
-  void append<T extends Comparable>(String attribute, Filter filter) {
-    final next = _projections.last.where(attribute, (
-      filter as Filter<T>
-    ).predicate);
+  void append(String attribute, Filter filter) {
+    final next = _projections.last.where((filter).filter);
     next.onChange = _onchange;
     _projections.add(next);
     cachedColumns.clear();
@@ -69,7 +67,7 @@ final class ProjectionsModel extends ChangeNotifier {
   void splice(Iterable<Filter> filters, [ int remove = 1 ]) {
     _projections.length -= (filters.length + remove);
     for(final filter in filters) _projections.add(
-      _projections.last.where(filter.attribute, filter.predicate)
+      _projections.last.where(filter.filter)
     );
     _projections.last.onChange = _onchange;
     cachedColumns.clear();

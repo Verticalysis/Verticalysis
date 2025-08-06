@@ -156,10 +156,10 @@ final class HeaderTray extends StatelessWidget {
     final attr = toplevel.pipelineModel.getAttributeByName(attribute);
     if(_filterMode.value.buildFilter(
       predicate.trim(), attr
-    ) case final Filter filter) {
+    ) case final SingleAttributeFilter filter) {
       toplevel.unifinderController.setMode();
       toplevel.filtersModel.append(attribute, filter);
-      attr.genericInvoke2(toplevel.projectionsModel.append, attribute, filter);
+      toplevel.projectionsModel.append(attribute, filter);
     } else alertError("Invalid condition", "Input is not a valid $filterMode");
     exitFilterEdit();
   }

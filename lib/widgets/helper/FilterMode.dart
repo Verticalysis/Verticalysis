@@ -17,11 +17,13 @@ enum FilterMode {
 
   const FilterMode(this.label, this.hint, this.buildFilter);
 
-  final Filter? Function(String literal, Attribute attr) buildFilter;
+  final SingleAttributeFilter? Function(
+    String literal, Attribute attr
+  ) buildFilter;
   final String label;
   final String hint;
 
-  static Filter? buildEqualityFilter(
+  static SingleAttributeFilter? buildEqualityFilter(
     String literal, Attribute attr
   ) => switch(attr.match(_scalarParser)(literal)){
     null => null,
@@ -30,7 +32,7 @@ enum FilterMode {
     )
   };
 
-  static Filter? buildIntervalFilter(
+  static SingleAttributeFilter? buildIntervalFilter(
     String literal, Attribute attr
   ) => switch(attr.match(_scalarParser)(literal)){
     null => null,
@@ -39,7 +41,7 @@ enum FilterMode {
     )
   };
 
-  /*static Filter? buildIntervalFilterNonInclusive(
+  /*static SingleAttributeFilter? buildIntervalFilterNonInclusive(
     String literal, Attribute attr
   ) => switch(attr.match(_scalarParser)(literal)){
     null => null,
@@ -48,7 +50,7 @@ enum FilterMode {
     )
   };
 
-  static Filter? buildIntervalFilterBothInclusive(
+  static SingleAttributeFilter? buildIntervalFilterBothInclusive(
     String literal, Attribute attr
   ) => switch(attr.match(_scalarParser)(literal)){
     null => null,
@@ -57,7 +59,7 @@ enum FilterMode {
     )
   };
 
-  static Filter? buildIntervalFilterLeftInclusive(
+  static SingleAttributeFilter? buildIntervalFilterLeftInclusive(
     String literal, Attribute attr
   ) => switch(attr.match(_scalarParser)(literal)){
     null => null,
@@ -66,7 +68,7 @@ enum FilterMode {
     )
   };
 
-  static Filter? buildIntervalFilterRightInclusive(
+  static SingleAttributeFilter? buildIntervalFilterRightInclusive(
     String literal, Attribute attr
   ) => switch(attr.match(_scalarParser)(literal)){
     null => null,
@@ -75,7 +77,7 @@ enum FilterMode {
     )
   };*/
 
-  static Filter? buildLessThanFilter(
+  static SingleAttributeFilter? buildLessThanFilter(
     String literal, Attribute attr
   ) => switch(attr.match(_scalarParser)(literal)){
     null => null,
@@ -84,7 +86,7 @@ enum FilterMode {
     )
   };
 
-  static Filter? buildGreaterThanFilter(
+  static SingleAttributeFilter? buildGreaterThanFilter(
     String literal, Attribute attr
   ) => switch(attr.match(_scalarParser)(literal)){
     null => null,
@@ -93,7 +95,7 @@ enum FilterMode {
     )
   };
 
-  static Filter? buildLessOrEqualFilter(
+  static SingleAttributeFilter? buildLessOrEqualFilter(
     String literal, Attribute attr
   ) => switch(attr.match(_scalarParser)(literal)){
     null => null,
@@ -102,7 +104,7 @@ enum FilterMode {
     )
   };
 
-  static Filter? buildGreaterOrEqualFilter(
+  static SingleAttributeFilter? buildGreaterOrEqualFilter(
     String literal, Attribute attr
   ) => switch(attr.match(_scalarParser)(literal)){
     null => null,
