@@ -28,6 +28,7 @@ import '../models/ScrollModel.dart';
 import '../models/SelectionsModel.dart';
 import '../utils/EnhancedPatterns.dart';
 // import '../models/SkipListModel.dart';
+import 'helper/Events.dart';
 import 'helper/Formatter.dart';
 import 'helper/LoadWithSchema.dart';
 import 'shared/Latch.dart';
@@ -91,12 +92,12 @@ final class MonitorMode extends StatelessWidget {
 
   static const minToolHeight = 60;
 
+  final EventDispatcher dispatcher;
   final analyzeModel = AnalysisCandidates();
   final plotterModel = PlotterModel();
   final scrollModel = ScrollModel();
   final selectionsModel = SelectionsModel();
   final vcxController = VerticatrixController();
-  final FiltersModel filtersModel;
   final PipelineModel pipelineModel;
   final ProjectionsModel projectionsModel;
   final SchemasModel schemasModel;
@@ -158,20 +159,27 @@ final class MonitorMode extends StatelessWidget {
 
   MonitorMode(
     ByteStream stream, Schema schema, SchemasModel schemas, TabData container
-  ): this._(stream, schema, schemas, FiltersModel(), EventManifold(onStreamError), container);
+  ): this._(
+    stream,
+    schema,
+    schemas,
+    EventManifold(onStreamError),
+    EventDispatcher(Event.values),
+    container
+  );
 
   MonitorMode._(
     ByteStream stream,
     Schema schema,
     this.schemasModel,
-    this.filtersModel,
     EventManifold evtManifold,
+    this.dispatcher,
     this.container
   ): pipelineModel = PipelineModel(evtManifold)..connect(schema, stream),
     projectionsModel = ProjectionsModel(
       evtManifold, schema.chronologicallySortedBy
     ) {
-    unifinderController = UnifinderController(this);
+    unifinderController = UnifinderController(this, dispatcher);
     container.value = dispose;
     WidgetsBinding.instance.addObserver(
       WindowSizeObserver(updateScrollModel, this)
@@ -180,7 +188,6 @@ final class MonitorMode extends StatelessWidget {
     projectionsModel.preNotify = () => vcxController.syncColumns((name) {
       return projectionsModel.getColumn(name, pipelineModel.getAttrTypeByName);
     }, projectionsModel.currentLength);
-    filtersModel.onRemove = (trailing) => projectionsModel.splice(trailing);
     vcxController.onRegionSelect = onRegionUpdate;
     vcxController.onScroll = updateScrollModel;
     evtManifold.onNewColumns = (columns) {
@@ -190,6 +197,19 @@ final class MonitorMode extends StatelessWidget {
         )
       );
     };
+    dispatcher.listen(
+      Event.projectionAppend,
+      (Filter filter) => projectionsModel.append(filter)
+    );
+    dispatcher.listen(
+      Event.projectionRemove,
+      (Iterable<Filter> filter) => projectionsModel.splice(filter)
+    );
+    dispatcher.listen(
+      Event.projectionClear,
+      () => projectionsModel.clear()
+    );
+    dispatcher.syncChannels();
   }
 
   void onRegionUpdate(

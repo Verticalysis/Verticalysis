@@ -49,7 +49,7 @@ final class ProjectionsModel extends ChangeNotifier {
   }
 
   /// Push a projection created with the filter corresponding to [pred]
-  void append(String attribute, Filter filter) {
+  void append(Filter filter) {
     final next = _projections.last.where((filter).filter);
     next.onChange = _onchange;
     _projections.add(next);
@@ -71,6 +71,13 @@ final class ProjectionsModel extends ChangeNotifier {
     );
     _projections.last.onChange = _onchange;
     cachedColumns.clear();
+    preNotify();
+    notifyListeners();
+  }
+
+  /// Pop all projections from the stack, except the last one.
+  void clear() {
+    _projections.length = 1;
     preNotify();
     notifyListeners();
   }

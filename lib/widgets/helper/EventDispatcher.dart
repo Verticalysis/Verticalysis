@@ -54,6 +54,12 @@ final class EventDispatcher {
   final _channels = <Channel>[];
 }
 
+void Function() notifier0(
+  List<void Function()> listeners
+) => () {
+  for(final listener in listeners) listener();
+};
+
 void Function(T1 _) notifier1<T1>(
   List<void Function(T1 _)> listeners
 ) => (a1) {

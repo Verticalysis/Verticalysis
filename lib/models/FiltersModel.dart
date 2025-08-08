@@ -3,8 +3,6 @@
 // GPLv3 license. Use of this file is governed by terms and conditions that
 // can be found in the COPYRIGHT file.
 
-import 'package:flutter/foundation.dart';
-
 abstract class Filter<T extends Comparable> {
   Filter(this.attribute);
 
@@ -146,27 +144,26 @@ final class GreaterThanFilter<T extends Comparable>
   final String label;
 }
 
-final class FiltersModel extends ChangeNotifier {
+mixin FiltersModel {
   final filters = <Filter>[];
 
-  void Function(Iterable<Filter> trailing) onRemove = (_) {};
+  bool get isFiltersEmpty => filters.isEmpty;
 
-  bool get isEmpty => filters.isEmpty;
+  notifyListeners();
 
-  void clear() {
+  void clearFilters() {
     filters.clear();
     notifyListeners();
   }
 
-  void append(String column, Filter rule) {
+  void appendFilter(Filter rule) {
     filters.add(rule);
     notifyListeners();
   }
 
-  Iterable<Filter> remove(int index) {
+  Iterable<Filter> removeFilter(int index) {
     filters.removeAt(index);
     notifyListeners();
-    onRemove(filters.skip(index));
     return filters.skip(index);
   }
 }

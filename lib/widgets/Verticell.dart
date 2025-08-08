@@ -11,6 +11,7 @@ import 'package:flutter_platform_alert/flutter_platform_alert.dart';
 import '../models/FiltersModel.dart';
 import '../models/ProjectionsModel.dart';
 import '../models/SelectionsModel.dart';
+import 'helper/Events.dart';
 import 'helper/FilterMode.dart';
 import 'shared/Extensions.dart';
 import 'shared/Select.dart';
@@ -133,6 +134,7 @@ final class HeaderTray extends StatelessWidget {
   final _filterMode = ValueNotifier(FilterMode.equality);
   final MonitorMode toplevel;
   final String attribute;
+  final Channel<Notifer1<Filter>> _filterAppendCh;
   final _timer = Stream<Never?>.periodic(
     const Duration(milliseconds: 90)
   ).listen(null)..pause();
@@ -144,7 +146,9 @@ final class HeaderTray extends StatelessWidget {
     fixedSize: const Size.square(12),
   );
 
-  HeaderTray(this.attribute, this.toplevel);
+  HeaderTray(
+    this.attribute, this.toplevel
+  ): _filterAppendCh = toplevel.dispatcher.getChannel(Event.filterAppend);
 
   void exitFilterEdit() {
     _timer..onData(null)..pause();
@@ -157,9 +161,7 @@ final class HeaderTray extends StatelessWidget {
     if(_filterMode.value.buildFilter(
       predicate.trim(), attr
     ) case final SingleAttributeFilter filter) {
-      toplevel.unifinderController.setMode();
-      toplevel.filtersModel.append(attribute, filter);
-      toplevel.projectionsModel.append(attribute, filter);
+      _filterAppendCh.notify(filter);
     } else alertError("Invalid condition", "Input is not a valid $filterMode");
     exitFilterEdit();
   }

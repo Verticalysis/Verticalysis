@@ -9,6 +9,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../domain/schema/AttrType.dart';
 import '../models/FiltersModel.dart';
 import '../models/ProjectionsModel.dart';
+import 'helper/Events.dart';
 import 'shared/Clickable.dart';
 import 'shared/Hoverable.dart';
 import 'shared/Select.dart';
@@ -143,22 +144,28 @@ extension on Comparable {
 
 final class UnifinderController {
   factory UnifinderController(
-    MonitorMode toplevel, [ String keyword = ""]
+    MonitorMode toplevel, EventDispatcher dispatcher, [ String keyword = ""]
   ) => UnifinderController._(
     ValueNotifier(true),
-    TagsEditingController(toplevel.filtersModel),
+    TagsEditingController(dispatcher),
     TextEditingController(text: keyword),
-    SearchController(toplevel)
+    SearchController(toplevel),
+    dispatcher
   );
 
   UnifinderController._(
     this._case,
     this.tagsEditingController,
     this.textEditingController,
-    SearchController searchController
+    SearchController searchController,
+    EventDispatcher dispatcher,
   ): _searching = searchController.search(
     textEditingController, _case
-  ).iterator;
+  ).iterator {
+    dispatcher.listen(Event.filterAppend, (_) {
+      if(_mode.value != Mode.filter) _mode.value = Mode.filter;
+    });
+  }
 
   final TagsEditingController tagsEditingController;
   final TextEditingController textEditingController;
@@ -174,11 +181,6 @@ final class UnifinderController {
   TextEditingController get editor => mode == Mode.filter ?
     tagsEditingController :
     textEditingController;
-
-  void setMode([ Mode newMode = Mode.filter ]) {
-    // tagsEditingController.tagEditMode = newMode == Mode.filter;
-    _mode.value = newMode;
-  }
 
   void toggleCaseSensitivity() => _case.value = !_case.value;
 
@@ -282,16 +284,30 @@ final class Unifinder extends StatelessWidget {
   );
 }
 
-final class TagsEditingController extends TextEditingController {
-  TagsEditingController(this._filters, { String? text }): super.fromValue(
+final class TagsEditingController
+  extends TextEditingController with FiltersModel {
+  TagsEditingController(EventDispatcher dispatcher, {
+    String? text
+  }): _projectionAppendCh = dispatcher.getChannel(Event.projectionAppend),
+    _projectionRemoveCh = dispatcher.getChannel(Event.projectionRemove),
+    _projectionClearCh = dispatcher.getChannel(Event.projectionClear),
+    super.fromValue(
     text == null ? TextEditingValue.empty : TextEditingValue(text: text)
   ) {
-    _filters.addListener(_listener);
+    dispatcher.listen(Event.filterAppend, (Filter filter) {
+      appendFilter(filter);
+      _projectionAppendCh.notify(filter);
+    });
   }
 
-  final FiltersModel _filters;
+  final Channel<Notifer1<Filter>> _projectionAppendCh;
+  final Channel<Notifer1<Iterable<Filter>>> _projectionRemoveCh;
+  final Channel<VoidCallback> _projectionClearCh;
 
-  void clear() => _filters.clear();
+  void clear() {
+    clearFilters();
+    _projectionClearCh.notify();
+  }
 
   @override
   TextSpan buildTextSpan({
@@ -299,12 +315,12 @@ final class TagsEditingController extends TextEditingController {
     TextStyle? style,
     required bool withComposing
   }) => TextSpan(
-    text: _filters.isEmpty && text.isEmpty ? "Filter" : null,
+    text: isFiltersEmpty && text.isEmpty ? "Filter" : null,
     style: TextTheme.of(context).bodyLarge!.copyWith(
       color: ColorScheme.of(context).onSurfaceVariant
     ),
     children: _layoutTags(
-      _filters.filters,
+      filters,
       TextTheme.of(context).bodyLarge!,
       ColorScheme.of(context)
     ));
@@ -312,17 +328,12 @@ final class TagsEditingController extends TextEditingController {
   @override
   void dispose() {
     super.dispose();
-    _filters.removeListener(_listener);
-  }
-
-  void _listener() {
-
   }
 
   List<InlineSpan> _layoutTags(List<Filter> filters, TextStyle style, ColorScheme sch) {
     final res = <InlineSpan>[];
 
-    for(final (index, tag) in _filters.filters.indexed) {
+    for(final (index, tag) in filters.indexed) {
       res.add(_buildTag(tag.label, index, sch));
       res.add(const WidgetSpan(child: SizedBox(width: 9, height: 9)));
     }
@@ -338,7 +349,7 @@ final class TagsEditingController extends TextEditingController {
       clipBehavior: Clip.antiAlias,
       backgroundColor: sch.onPrimaryFixed,
       shadowColor: Colors.transparent,
-      onDeleted: () => _filters.remove(index),
+      onDeleted: () => _projectionRemoveCh.notify(removeFilter(index)),
       padding: const EdgeInsets.all(0),
       labelPadding: const EdgeInsets.fromLTRB(9, 0, 0, 1),
       deleteButtonTooltipMessage: "",

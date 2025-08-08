@@ -13,7 +13,7 @@ enum Event<T extends Function> implements Topic<T> {
   selectRegionUpdate(notifier3<int, int, Iterable<(String, List<String?>)>>),
   projectionAppend(notifier1<Filter>),
   projectionRemove(notifier1<Iterable<Filter>>),
-  filterRemove(notifier1<Iterable<Filter>>),
+  projectionClear(notifier0),
   filterAppend(notifier1<Filter>);
 
   const Event(this._notifer);
