@@ -209,6 +209,10 @@ final class MonitorMode extends StatelessWidget {
       Event.projectionClear,
       () => projectionsModel.clear()
     );
+    dispatcher.listen(
+      Event.expandToolView,
+      (Toolset tool) => expandToolView(tool)
+    );
     dispatcher.syncChannels();
   }
 

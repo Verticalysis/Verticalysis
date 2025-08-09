@@ -139,6 +139,7 @@ final class HeaderTray extends StatelessWidget {
   final MonitorMode toplevel;
   final String attribute;
   final Channel<Notifer1<Filter>> _filterAppendCh;
+  final Channel<Notifer1<Toolset>> _expandToolViewCh;
   final _timer = Stream<Never?>.periodic(
     const Duration(milliseconds: 90)
   ).listen(null)..pause();
@@ -152,7 +153,8 @@ final class HeaderTray extends StatelessWidget {
 
   HeaderTray(
     this.attribute, this.toplevel
-  ): _filterAppendCh = toplevel.dispatcher.getChannel(Event.filterAppend);
+  ): _filterAppendCh = toplevel.dispatcher.getChannel(Event.filterAppend),
+    _expandToolViewCh = toplevel.dispatcher.getChannel(Event.expandToolView);
 
   void exitFilterEdit() {
     _timer..onData(null)..pause();
@@ -205,7 +207,7 @@ final class HeaderTray extends StatelessWidget {
               final type = toplevel.pipelineModel.getAttrTypeByName(attribute);
               if(type.allowCast<num>()) {
                 toplevel.plotterModel.addTrace(attribute);
-                toplevel.expandToolView(Toolset.plotter);
+                _expandToolViewCh.notify(Toolset.plotter);
               } else alertError(
                 "Cannot plot non-numeric data!",
                 "The column of type ${type.keyword} cannot be plotted.\n"
@@ -307,7 +309,11 @@ final class CollectHeaderTray extends StatelessWidget {
 
 final class PrimaryRowHeaderBuilder {
   final MonitorMode toplevel;
-  PrimaryRowHeaderBuilder(this.toplevel);
+  final Channel<Notifer1<Toolset>> _expandToolViewCh;
+
+  PrimaryRowHeaderBuilder(this.toplevel):
+    _expandToolViewCh = toplevel.dispatcher.getChannel(Event.expandToolView);
+
   int rawIndex(int rowIndex) => toplevel.projectionsModel.current.indexAt(rowIndex);
 
   Widget build(BuildContext context, int rowIndex) => GestureDetector(
@@ -335,7 +341,7 @@ final class PrimaryRowHeaderBuilder {
         ),
         child: Text("Collect", style: TextTheme.of(context).titleMedium),
         onPressed: () {
-          toplevel.expandToolView(Toolset.collect);
+          _expandToolViewCh.notify(Toolset.collect);
           toplevel.selectionsModel.add(rawIndex(rowIndex));
         }
       )

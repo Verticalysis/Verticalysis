@@ -4,6 +4,7 @@
 // can be found in the COPYRIGHT file.
 
 import '../../models/FiltersModel.dart';
+import '../MonitorMode.dart';
 import 'EventDispatcher.dart';
 export 'EventDispatcher.dart';
 
@@ -14,7 +15,8 @@ enum Event<T extends Function> implements Topic<T> {
   projectionAppend(notifier1<Filter>),
   projectionRemove(notifier1<Iterable<Filter>>),
   projectionClear(notifier0),
-  filterAppend(notifier1<Filter>);
+  filterAppend(notifier1<Filter>),
+  expandToolView(notifier1<Toolset>);
 
   const Event(this._notifer);
 
