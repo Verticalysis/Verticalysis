@@ -98,7 +98,13 @@ extension type CollectHeaderBuilder(ProjectionsModel projections) {
   );
 }
 
-extension type SortButton(ProjectionsModel projections) {
+final class SortButton extends StatelessWidget {
+  final ProjectionsModel projections;
+  final String attribute;
+  final bool descending;
+
+  SortButton(this.projections, this.attribute, this.descending);
+
   T isSorted<T>(String attribute, T sorted, T unsorted, bool descending) {
     final sortStatus = projections.current.currentlySortedBy;
     if(sortStatus == null) return unsorted;
@@ -107,9 +113,7 @@ extension type SortButton(ProjectionsModel projections) {
     return desc == descending ? sorted : unsorted;
   }
 
-  Widget build(
-    BuildContext context,  String attribute, bool descending
-  ) => IconButton(
+  Widget build(BuildContext context) => IconButton(
     icon: RotatedBox(quarterTurns: descending ? 2 : 0, child: Icon(
       Icons.sort, color: ColorScheme.of(context).onSurface)
     ),
@@ -190,12 +194,8 @@ final class HeaderTray extends StatelessWidget {
               })..resume();
             },
           ),
-          SortButton( // sort with this column in ascending order
-            toplevel.projectionsModel
-          ).build(context, attribute, false),
-          SortButton( // sort with this column in descending order
-            toplevel.projectionsModel
-          ).build(context, attribute, true),
+          SortButton(toplevel.projectionsModel, attribute, false /* ascending */),
+          SortButton(toplevel.projectionsModel, attribute, true /* descending */),
           IconButton( // add a trace to plot with the data in this column
             icon: Icon(
               Icons.area_chart, color: ColorScheme.of(context).onSurface
@@ -299,17 +299,15 @@ final class CollectHeaderTray extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      SortButton( // sort with this column in ascending order
-        projections
-      ).build(context, attribute, false),
-      SortButton( // sort with this column in descending order
-        projections
-      ).build(context, attribute, true),
+      SortButton(projections, attribute, false /* ascending */),
+      SortButton(projections, attribute, true /* descending */),
     ]
   );
 }
 
-extension type RowHeader(MonitorMode toplevel) {
+final class PrimaryRowHeaderBuilder {
+  final MonitorMode toplevel;
+  PrimaryRowHeaderBuilder(this.toplevel);
   int rawIndex(int rowIndex) => toplevel.projectionsModel.current.indexAt(rowIndex);
 
   Widget build(BuildContext context, int rowIndex) => GestureDetector(
@@ -351,7 +349,10 @@ extension type RowHeader(MonitorMode toplevel) {
   ) ? selected(interm) : unselected(interm);
 }
 
-extension type CollectRowHeader(ProjectionsModel collectProjections) {
+final class CollectRowHeaderBuilder {
+  final ProjectionsModel collectProjections;
+  CollectRowHeaderBuilder(this.collectProjections);
+
   Widget build(BuildContext context, int rowIndex) => Container(
     alignment: Alignment.centerLeft,
     color: ColorScheme.of(context).surfaceContainer,

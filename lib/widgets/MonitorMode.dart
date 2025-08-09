@@ -311,7 +311,7 @@ final class MonitorMode extends StatelessWidget {
               TextTheme.of(context),
               vcxController,
               PrimaryHeaderBuilder(this).build,
-              RowHeader(this).build,
+              PrimaryRowHeaderBuilder(this).build,
               selectionsModel,
               Formatter.formatters,
             )
