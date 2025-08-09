@@ -72,7 +72,7 @@ enum Toolset {
   static Widget buildPlotter(
     MonitorMode toplevel, BuildContext ctx
   ) => Plotter(
-    toplevel.plotterModel,
+    toplevel.dispatcher,
     toplevel.projectionsModel,
     toplevel.pipelineModel
   );
@@ -94,7 +94,6 @@ final class MonitorMode extends StatelessWidget {
 
   final EventDispatcher dispatcher;
   final analyzeModel = AnalysisCandidates();
-  final plotterModel = PlotterModel();
   final scrollModel = ScrollModel();
   final selectionsModel = SelectionsModel();
   final vcxController = VerticatrixController();
@@ -441,7 +440,7 @@ final class MonitorMode extends StatelessWidget {
                 result.path,
                 (stream) => pipelineModel.connect(schema, stream)
               );
-              plotterModel.forceUpdate(); // Potential new reference columns
+              // TODO: notify plotter for potential new reference columns
             }
           });
         },

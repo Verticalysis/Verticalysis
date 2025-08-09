@@ -138,6 +138,7 @@ final class HeaderTray extends StatelessWidget {
   final _filterMode = ValueNotifier(FilterMode.equality);
   final MonitorMode toplevel;
   final String attribute;
+  final Channel<Notifer1<String>> _newTraceCh;
   final Channel<Notifer1<Filter>> _filterAppendCh;
   final Channel<Notifer1<Toolset>> _expandToolViewCh;
   final _timer = Stream<Never?>.periodic(
@@ -153,7 +154,8 @@ final class HeaderTray extends StatelessWidget {
 
   HeaderTray(
     this.attribute, this.toplevel
-  ): _filterAppendCh = toplevel.dispatcher.getChannel(Event.filterAppend),
+  ): _newTraceCh = toplevel.dispatcher.getChannel(Event.newTrace),
+    _filterAppendCh = toplevel.dispatcher.getChannel(Event.filterAppend),
     _expandToolViewCh = toplevel.dispatcher.getChannel(Event.expandToolView);
 
   void exitFilterEdit() {
@@ -206,8 +208,8 @@ final class HeaderTray extends StatelessWidget {
             onPressed: () {
               final type = toplevel.pipelineModel.getAttrTypeByName(attribute);
               if(type.allowCast<num>()) {
-                toplevel.plotterModel.addTrace(attribute);
                 _expandToolViewCh.notify(Toolset.plotter);
+                _newTraceCh.notify(attribute);
               } else alertError(
                 "Cannot plot non-numeric data!",
                 "The column of type ${type.keyword} cannot be plotted.\n"

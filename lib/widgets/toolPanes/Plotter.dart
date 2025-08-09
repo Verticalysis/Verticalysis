@@ -12,6 +12,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../../models/PlotterModel.dart';
 import '../../models/PipelineModel.dart';
 import '../../models/ProjectionsModel.dart';
+import '../helper/Events.dart';
 import '../shared/Clickable.dart';
 import '../shared/Extensions.dart';
 import '../shared/Decorations.dart';
@@ -27,9 +28,13 @@ enum LineType {
 
 
 final class Plotter extends StatelessWidget {
-  Plotter(this._plotterModel, this._projectionsModel, this._pipelineModel);
+  Plotter(EventDispatcher dispatcher, this._projectionsModel, this._pipelineModel) {
+    dispatcher.listen(Event.newTrace, (String attr) {
+      _plotterModel.addTrace(attr);
+    });
+  }
 
-  final PlotterModel _plotterModel;
+  final _plotterModel = PlotterModel();
   final PipelineModel _pipelineModel;
   final ProjectionsModel _projectionsModel;
 
