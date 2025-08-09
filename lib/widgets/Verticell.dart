@@ -310,9 +310,11 @@ final class CollectHeaderTray extends StatelessWidget {
 final class PrimaryRowHeaderBuilder {
   final MonitorMode toplevel;
   final Channel<Notifer1<Toolset>> _expandToolViewCh;
+  final Channel<Notifer1<int>> _collectionAppendCh;
 
   PrimaryRowHeaderBuilder(this.toplevel):
-    _expandToolViewCh = toplevel.dispatcher.getChannel(Event.expandToolView);
+    _expandToolViewCh = toplevel.dispatcher.getChannel(Event.expandToolView),
+    _collectionAppendCh = toplevel.dispatcher.getChannel(Event.collectionAppend);
 
   int rawIndex(int rowIndex) => toplevel.projectionsModel.current.indexAt(rowIndex);
 
@@ -342,7 +344,7 @@ final class PrimaryRowHeaderBuilder {
         child: Text("Collect", style: TextTheme.of(context).titleMedium),
         onPressed: () {
           _expandToolViewCh.notify(Toolset.collect);
-          toplevel.selectionsModel.add(rawIndex(rowIndex));
+          _collectionAppendCh.notify(rawIndex(rowIndex));
         }
       )
     )
@@ -356,8 +358,11 @@ final class PrimaryRowHeaderBuilder {
 }
 
 final class CollectRowHeaderBuilder {
-  final ProjectionsModel collectProjections;
-  CollectRowHeaderBuilder(this.collectProjections);
+  final Channel<Notifer1<int>> _collectionRemoveCh;
+
+  CollectRowHeaderBuilder(
+    MonitorMode toplevel
+  ): _collectionRemoveCh = toplevel.dispatcher.getChannel(Event.collectionRemove);
 
   Widget build(BuildContext context, int rowIndex) => Container(
     alignment: Alignment.centerLeft,
@@ -368,7 +373,7 @@ final class CollectRowHeaderBuilder {
     context,
     TextButton(
       child: Text("Remove", style: TextTheme.of(context).titleMedium),
-      onPressed: () => collectProjections.current.remove(rowIndex),
+      onPressed: () => _collectionRemoveCh.notify(rowIndex),
       style: TextButton.styleFrom(
         shape: const RoundedRectangleBorder(borderRadius: rectBorder)
       )

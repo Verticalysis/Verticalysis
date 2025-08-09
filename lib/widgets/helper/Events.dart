@@ -16,6 +16,10 @@ enum Event<T extends Function> implements Topic<T> {
   projectionRemove(notifier1<Iterable<Filter>>),
   projectionClear(notifier0),
   filterAppend(notifier1<Filter>),
+  selectionAppend(notifier1<int>),
+  selectionRemove(notifier1<int>),
+  collectionAppend(notifier1<int>),
+  collectionRemove(notifier1<int>),
   expandToolView(notifier1<Toolset>);
 
   const Event(this._notifer);

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import '../../models/PipelineModel.dart';
 import '../../models/ProjectionsModel.dart';
 import '../../models/SelectionsModel.dart';
+import '../helper/Events.dart';
 import '../helper/Formatter.dart';
 import '../shared/Decorations.dart';
 import '../MonitorMode.dart';
@@ -31,11 +32,16 @@ final class Collect extends StatelessWidget {
 
   static final phonyChangeNotifier = PhonyChangeNotifier();
 
-  Collect(
-    this.toplevel,
-    this._projections,
-    this.linkedVcxController
-  );
+  Collect(this.toplevel, this._projections, this.linkedVcxController) {
+    toplevel.dispatcher.listen(Event.collectionAppend, (int index) {
+      _projections.current.include([index]);
+      primaryVcxController.entries = _projections.current.length;
+    });
+    toplevel.dispatcher.listen(Event.collectionRemove, (int row) {
+      _projections.current.remove(row);
+      primaryVcxController.entries = _projections.current.length;
+    });
+  }
 
   @override
   Widget build(BuildContext context) => Column(children: [
@@ -148,7 +154,7 @@ final class Collect extends StatelessWidget {
         expandHeaders ? CollectHeaderBuilder(
           _projections
         ).build : (_, _, _, _) => SizedBox.shrink(),
-        CollectRowHeader(_projections).build,
+        CollectRowHeaderBuilder(toplevel).build,
         phonyChangeNotifier,
         Formatter.formatters,
         showHeaderBackground: expandHeaders
