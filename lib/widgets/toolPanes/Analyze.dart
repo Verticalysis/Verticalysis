@@ -10,10 +10,13 @@ import 'package:sliver_sticky_collapsable_panel/sliver_sticky_collapsable_panel.
 
 import '../../domain/analysis/Analyzer.dart';
 import '../../models/AnalysisCandidates.dart';
+import '../../models/ProjectionsModel.dart';
 import '../helper/AnalyzersController.dart';
+import '../helper/Events.dart';
 import '../shared/Clickable.dart';
 import '../shared/FadedSliver.dart';
 import '../shared/Hoverable.dart';
+import '../MonitorMode.dart';
 import '../Style.dart';
 
 final class ResizeState {
@@ -30,7 +33,7 @@ final class Analyze extends StatelessWidget {
 
   final _scrollController = ScrollController();
   final tabsctl = TabbedViewController([]);
-  final AnalysisCandidates analysisCandidates;
+  final analysisCandidates = AnalysisCandidates();
 
   static const _entryInset = EdgeInsets.symmetric(vertical: 6, horizontal: 12);
 
@@ -40,8 +43,18 @@ final class Analyze extends StatelessWidget {
     return page;
   }
 
-  Analyze(this.analysisCandidates) {
+  Analyze(MonitorMode toplevel) {
     tabsctl.addTab(newPage());
+    toplevel.dispatcher.listen(
+      Event.selectRegionUpdate,
+      (int startRow, int endRow, Iterable<(String, List<String?>)> columns) {
+        analysisCandidates.update([ for(
+          final (name, column) in columns
+        ) AnalysisCandidate<StringfiedView>(
+          name, toplevel.pipelineModel.getAttrTypeByName(name), column as StringfiedView
+        )], startRow, endRow);
+      }
+    );
   }
 
   Widget _headerBuilder(BuildContext context, String text, IconData icon

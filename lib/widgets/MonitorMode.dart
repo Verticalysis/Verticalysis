@@ -70,13 +70,17 @@ final class MonitorMode extends StatelessWidget {
   static const minToolHeight = 60;
 
   final EventDispatcher dispatcher;
-  final analyzeModel = AnalysisCandidates();
   final scrollModel = ScrollModel();
   final selectionsModel = SelectionsModel();
   final vcxController = VerticatrixController();
   final PipelineModel pipelineModel;
   final ProjectionsModel projectionsModel;
   final SchemasModel schemasModel;
+
+  final Channel<Notifer3<int, int, Iterable<(
+    String, List<String?>
+  )>>> _selectRegionUpdateCh;
+
   late final UnifinderController unifinderController;
 
   bool get toolVisible => _toolView.value != Toolset.none;
@@ -154,8 +158,9 @@ final class MonitorMode extends StatelessWidget {
   ): pipelineModel = PipelineModel(evtManifold)..connect(schema, stream),
     projectionsModel = ProjectionsModel(
       evtManifold, schema.chronologicallySortedBy
-    ) {
-    _toolset.add(Analyze(analyzeModel));
+    ),
+    _selectRegionUpdateCh = dispatcher.getChannel(Event.selectRegionUpdate) {
+    _toolset.add(Analyze(this));
     _toolset.add(Collect(this, ProjectionsModel.single(
       projectionsModel.current.cleared
     ), vcxController));
@@ -200,11 +205,7 @@ final class MonitorMode extends StatelessWidget {
   void onRegionUpdate(
     int startRow, int endRow, Iterable<(String, List<String?>)> columns
   ) {
-    analyzeModel.update([ for(
-      final (name, column) in columns
-    ) AnalysisCandidate<StringfiedView>(
-      name, pipelineModel.getAttrTypeByName(name), column as StringfiedView
-    )], startRow, endRow);
+    _selectRegionUpdateCh.notify(startRow, endRow, columns);
     expandToolView(Toolset.analyze);
   }
 
