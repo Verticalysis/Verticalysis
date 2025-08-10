@@ -44,38 +44,13 @@ import 'Verticell.dart';
 import 'Verticatrix.dart';
 
 enum Toolset {
-  none("", buildNone),
-  analyze("Analyze", buildAnalyze),
-  collect("Collect", buildCollect),
-  plotter("Visualize", buildPlotter);
+  none(""),
+  analyze("Analyze"),
+  collect("Collect"),
+  plotter("Visualize");
 
-  const Toolset(this.label, this.build);
+  const Toolset(this.label);
   final String label;
-  final Widget Function(MonitorMode toplevel, BuildContext ctx) build;
-
-  static Widget buildNone(
-    MonitorMode toplevel, BuildContext ctx
-  ) => SizedBox.shrink();
-
-  static Widget buildAnalyze(
-    MonitorMode toplevel, BuildContext ctx
-  ) => Analyze(toplevel.analyzeModel);
-
-  static Widget buildCollect(
-    MonitorMode toplevel, BuildContext ctx
-  ) => Collect(
-    toplevel,
-    ProjectionsModel.single(toplevel.projectionsModel.current.cleared),
-    toplevel.vcxController
-  );
-
-  static Widget buildPlotter(
-    MonitorMode toplevel, BuildContext ctx
-  ) => Plotter(
-    toplevel.dispatcher,
-    toplevel.projectionsModel,
-    toplevel.pipelineModel
-  );
 }
 
 final class ResizeState {
@@ -89,6 +64,8 @@ final class MonitorMode extends StatelessWidget {
   final _toolHeight = ValueNotifier(.0);
   final _toolView = ValueNotifier(Toolset.none);
   final resizeState = ResizeState();
+
+  final _toolset = <Widget>[];
 
   static const minToolHeight = 60;
 
@@ -178,6 +155,11 @@ final class MonitorMode extends StatelessWidget {
     projectionsModel = ProjectionsModel(
       evtManifold, schema.chronologicallySortedBy
     ) {
+    _toolset.add(Analyze(analyzeModel));
+    _toolset.add(Collect(this, ProjectionsModel.single(
+      projectionsModel.current.cleared
+    ), vcxController));
+    _toolset.add(Plotter(dispatcher, projectionsModel, pipelineModel));
     unifinderController = UnifinderController(this, dispatcher);
     container.value = dispose;
     WidgetsBinding.instance.addObserver(
@@ -338,7 +320,7 @@ final class MonitorMode extends StatelessWidget {
               final tool in Toolset.values.skip(1)
             ) ValueListenableBuilder( // tool view
               valueListenable: _toolHeight,
-              child: toolView.build(this, context),
+              child: _toolset[tool.index - 1],
               builder: (context, height, childTool) => SizedBox(
                 height: toolView == tool ? _toolHeight.value : 0,
                 // width: MediaQuery.of(context).size.width,
