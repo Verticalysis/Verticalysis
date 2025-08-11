@@ -147,7 +147,7 @@ final class HeaderTray extends StatelessWidget {
     const Duration(milliseconds: 90)
   ).listen(null)..pause();
 
-  String get filterMode => _filterMode.value == FilterMode.interval ? "range" : "value";
+  String get filterMode => _filterMode.value == FilterMode.matchAny ? "range" : "value";
 
   final _buttonStyle = IconButton.styleFrom(
     shape: const RoundedRectangleBorder(borderRadius: rectBorder),
@@ -167,6 +167,7 @@ final class HeaderTray extends StatelessWidget {
   }
 
   void filterEditSubmit(String predicate) {
+    if(predicate.isEmpty) return exitFilterEdit();
     final attr = mmc.pipelineModel.getAttributeByName(attribute);
     if(_filterMode.value.buildFilter(
       predicate.trim(), attr

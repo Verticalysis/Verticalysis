@@ -52,7 +52,11 @@ final class MemberOfFilter<T extends Comparable>
   extends Filter<T> with SingleAttributeFilter<T> {
   MemberOfFilter(super.attribute, List<T> set): predicate = (
     (val) => set.contains(val)
-  ), label = "$attribute∈ {${set.join(" ")}}";
+  ), label = "$attribute ∈ { ${set.join(", ")} }";
+
+  static MemberOfFilter<T> relaxed<T extends Comparable>(
+    String attribute, List<Comparable?> set
+  )=> MemberOfFilter<T>(attribute, set.cast<T>());
 
   @override
   final bool Function(T? val) predicate;
@@ -71,10 +75,10 @@ final class IntervalFilter<T extends Comparable>
     (false, true)  => (val) => val != null && val > min && val <= max,
     (false, false) => (val) => val != null && val > min && val < max,
   }, label = switch((linclusive, rinclusive)) {
-    (true, true)   => "$attribute∈ [$min, $max]",
-    (true, false)  => "$attribute∈ [$min, $max)",
-    (false, true)  => "$attribute∈ ($min, $max]",
-    (false, false) => "$attribute∈ ($min, $max)",
+    (true, true)   => "$attribute ∈ [$min, $max]",
+    (true, false)  => "$attribute ∈ [$min, $max)",
+    (false, true)  => "$attribute ∈ ($min, $max]",
+    (false, false) => "$attribute ∈ ($min, $max)",
   };
 
   IntervalFilter.relaxedNonInclusive(

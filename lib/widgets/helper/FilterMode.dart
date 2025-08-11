@@ -6,10 +6,11 @@
 import '../../domain/schema/Attribute.dart';
 import '../../models/FiltersModel.dart';
 
+typedef ScalarParser = Comparable? Function(String);
+
 enum FilterMode {
   equality("=", "value...", buildEqualityFilter),
-  // memberOf(),
-  interval("∈", "[min, max)", buildIntervalFilter),
+  matchAny("∈", "[min, max)", buildMatchAnyFilter),
   lessThan("<", "max value", buildLessThanFilter),
   greaterThan(">", "min value", buildGreaterThanFilter),
   noMoreThan("≤", "max value", buildLessOrEqualFilter),
@@ -32,50 +33,41 @@ enum FilterMode {
     )
   };
 
-  static SingleAttributeFilter? buildIntervalFilter(
+  static SingleAttributeFilter? buildMatchAnyFilter(
     String literal, Attribute attr
-  ) => switch(attr.match(_scalarParser)(literal)){
-    null => null,
-    final Comparable value => attr.genericInvoke2(
-      LessThanFilter.relaxedNonInclusive, attr.name, value
-    )
-  };
-
-  /*static SingleAttributeFilter? buildIntervalFilterNonInclusive(
-    String literal, Attribute attr
-  ) => switch(attr.match(_scalarParser)(literal)){
-    null => null,
-    final Comparable value => attr.genericInvoke2(
-      LessThanFilter.relaxedNonInclusive, attr.name, value
-    )
-  };
-
-  static SingleAttributeFilter? buildIntervalFilterBothInclusive(
-    String literal, Attribute attr
-  ) => switch(attr.match(_scalarParser)(literal)){
-    null => null,
-    final Comparable value => attr.genericInvoke2(
-      LessThanFilter.relaxedNonInclusive, attr.name, value
-    )
-  };
-
-  static SingleAttributeFilter? buildIntervalFilterLeftInclusive(
-    String literal, Attribute attr
-  ) => switch(attr.match(_scalarParser)(literal)){
-    null => null,
-    final Comparable value => attr.genericInvoke2(
-      LessThanFilter.relaxedNonInclusive, attr.name, value
-    )
-  };
-
-  static SingleAttributeFilter? buildIntervalFilterRightInclusive(
-    String literal, Attribute attr
-  ) => switch(attr.match(_scalarParser)(literal)){
-    null => null,
-    final Comparable value => attr.genericInvoke2(
-      LessThanFilter.relaxedNonInclusive, attr.name, value
-    )
-  };*/
+  ) {
+    if(attr is Attribute<String>) {
+      return MemberOfFilter<String>(attr.name, _parseCommaSeparatedLiterals(literal));
+    } else {
+      IntervalFilter? Function<T extends Comparable>(
+        String _, Comparable _, Comparable _
+      ) filterCtor;
+      final scalarParser = attr.match(_scalarParser);
+      if(RegExp(r'^\[.*\]$').hasMatch(literal)) {
+        filterCtor = IntervalFilter.relaxedBothInclusive;
+      } else if(RegExp(r'^\[.*\)$').hasMatch(literal)) {
+        filterCtor = IntervalFilter.relaxedLeftInclusive;
+      } else if(RegExp(r'^\(.*\]$').hasMatch(literal)) {
+        filterCtor = IntervalFilter.relaxedRightInclusive;
+      } else if(RegExp(r'^\(.*\)$').hasMatch(literal)) {
+        filterCtor = IntervalFilter.relaxedNonInclusive;
+      } else { // early return for comma separated literals
+        final candidates = _parseCommaSeparatedLiterals(literal).map(
+          scalarParser
+        ).toList();
+        if(candidates.any((val) => val == null)) return null;
+        return attr.genericInvoke2(
+          MemberOfFilter.relaxed, attr.name, candidates
+        );
+      }
+      if( // all cases of ranges fall down to here
+        literal.substring(1, literal.length - 1).split(',') case [final minLiteral, final maxLiteral]
+      ) if((scalarParser(minLiteral), scalarParser(maxLiteral)) case (
+        final Comparable min, final Comparable max
+      )) if(max.compareTo(min) >= 0) return attr.genericInvoke3(filterCtor, attr.name, min, max);
+      return null;
+    }
+  }
 
   static SingleAttributeFilter? buildLessThanFilter(
     String literal, Attribute attr
@@ -113,7 +105,7 @@ enum FilterMode {
     )
   };
 
-  static const _scalarParser = <Comparable? Function(String)>[
+  static const _scalarParser = <ScalarParser>[
     int.tryParse,
     int.tryParse,
     double.tryParse,
@@ -124,8 +116,10 @@ enum FilterMode {
   ];
 
   static String _identityString(String s) => s;
+
+  static List<String> _parseCommaSeparatedLiterals(
+    String literal
+  ) => literal.split(RegExp(r'(?<!\\),')).map(
+    (e) => e.replaceAll(RegExp(r'\\(?=[\\,])'), '')
+  ).toList();
 }
-/*
-extension on Comparable? Function(String) {
-  (Comparable, Comparable)? parseInterval(literal)
-}*/
