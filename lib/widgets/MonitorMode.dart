@@ -11,26 +11,16 @@ import 'package:flutter_platform_alert/flutter_platform_alert.dart';
 import 'package:provider/provider.dart';
 import 'package:tabbed_view/tabbed_view.dart';
 
-import '../domain/analysis/Analyzer.dart';
 import '../domain/frontend/adapter/AnnotatedCSVadapter.dart';
 import '../domain/amorphous/EventManifold.dart';
-import '../domain/amorphous/Projection.dart';
 import '../domain/byteStream/ByteStream.dart';
 import '../domain/schema/Schema.dart';
-import '../models/AnalysisCandidates.dart';
-// import '../models/ConfigModels.dart';
-import '../models/FiltersModel.dart';
-import '../models/PipelineModel.dart';
-import '../models/PlotterModel.dart';
 import '../models/ProjectionsModel.dart';
 import '../models/SchemasModel.dart';
-import '../models/ScrollModel.dart';
-import '../models/SelectionsModel.dart';
-import '../utils/EnhancedPatterns.dart';
-// import '../models/SkipListModel.dart';
 import 'helper/Events.dart';
 import 'helper/Formatter.dart';
 import 'helper/LoadWithSchema.dart';
+import 'helper/MonitorModeController.dart';
 import 'shared/Latch.dart';
 import 'shared/NestedMenu.dart';
 import 'toolPanes/Analyze.dart';
@@ -41,17 +31,6 @@ import 'Style.dart';
 import 'ThemedWidgets.dart';
 import 'Unifinder.dart';
 import 'Verticell.dart';
-import 'Verticatrix.dart';
-
-enum Toolset {
-  none(""),
-  analyze("Analyze"),
-  collect("Collect"),
-  plotter("Visualize");
-
-  const Toolset(this.label);
-  final String label;
-}
 
 final class ResizeState {
   double prevCursorY = 0;
@@ -60,6 +39,7 @@ final class ResizeState {
 
 final class MonitorMode extends StatelessWidget {
   final TabData container;
+  final SchemasModel schemasModel;
 
   final _toolHeight = ValueNotifier(.0);
   final _toolView = ValueNotifier(Toolset.none);
@@ -69,138 +49,52 @@ final class MonitorMode extends StatelessWidget {
 
   static const minToolHeight = 60;
 
-  final EventDispatcher dispatcher;
-  final scrollModel = ScrollModel();
-  final selectionsModel = SelectionsModel();
-  final vcxController = VerticatrixController();
-  final PipelineModel pipelineModel;
-  final ProjectionsModel projectionsModel;
-  final SchemasModel schemasModel;
+  bool get toolVisible => _toolView.value != Toolset.none;
+
+  final MonitorModeController _controller;
+  final UnifinderController _unifinderController;
 
   final Channel<Notifer3<int, int, Iterable<(
     String, List<String?>
   )>>> _selectRegionUpdateCh;
 
-  late final UnifinderController unifinderController;
-
-  bool get toolVisible => _toolView.value != Toolset.none;
-
-  /*factory MonitorMode(
-    ByteStream stream, Schema schema, SchemasModel schemas, TabData container
-  ) {
-    final evtManifold = EventManifold(onStreamError);
-    final pipelineModel = PipelineModel(evtManifold);
-    final projectionsModel = ProjectionsModel(
-      evtManifold, schema.chronologicallySortedBy
-    );
-    return MonitorMode._(
-      stream,
-      schema,
-      schemas,
-      FiltersModel(),
-      pipelineModel,
-      projectionsModel,
-      EventManifold(onStreamError),
-      container
-    );
-  }
-
-  MonitorMode._(
-    ByteStream stream,
-    Schema schema,
-    this.schemasModel,
-    this.filtersModel,
-    this.pipelineModel,
-    this.projectionsModel,
-    EventManifold evtManifold,
-    this.container
-  ): unifinderController = UnifinderController(filtersModel) {
-    container.value = dispose;
-    WidgetsBinding.instance.addObserver(
-      WindowSizeObserver(updateScrollModel, this)
-    );
-    projectionsModel.onSizeChange = onEntriesUpdate;
-    projectionsModel.preNotify = () => vcxController.syncColumns((name) {
-      return projectionsModel.getColumn(name, pipelineModel.getAttrTypeByName);
-    }, projectionsModel.currentLength);
-    filtersModel.onRemove = (trailing) => projectionsModel.splice(trailing);
-    vcxController.onRegionSelect = onRegionUpdate;
-    vcxController.onScroll = updateScrollModel;
-    evtManifold.onNewColumns = (columns) {
-      print(columns);
-      for(final column in columns) vcxController.addColumn(
-        column, projectionsModel.getColumn(
-          column, pipelineModel.getAttrTypeByName
-        )
-      );
-    };
-    pipelineModel.connect(schema, stream);
-  }*/
-
   MonitorMode(
     ByteStream stream, Schema schema, SchemasModel schemas, TabData container
-  ): this._(
+  ): this._(MonitorModeController(
     stream,
     schema,
-    schemas,
     EventManifold(onStreamError),
     EventDispatcher(Event.values),
-    container
-  );
+  ), schemas, container);
 
   MonitorMode._(
-    ByteStream stream,
-    Schema schema,
-    this.schemasModel,
-    EventManifold evtManifold,
-    this.dispatcher,
-    this.container
-  ): pipelineModel = PipelineModel(evtManifold)..connect(schema, stream),
-    projectionsModel = ProjectionsModel(
-      evtManifold, schema.chronologicallySortedBy
-    ),
-    _selectRegionUpdateCh = dispatcher.getChannel(Event.selectRegionUpdate) {
-    _toolset.add(Analyze(this));
-    _toolset.add(Collect(this, ProjectionsModel.single(
-      projectionsModel.current.cleared
-    ), vcxController));
-    _toolset.add(Plotter(dispatcher, projectionsModel, pipelineModel));
-    unifinderController = UnifinderController(this, dispatcher);
+    MonitorModeController controller, this.schemasModel, TabData container
+  ): _selectRegionUpdateCh = controller.getChannel(Event.selectRegionUpdate),
+   _controller = controller,
+   _unifinderController = UnifinderController(controller),
+   container = container {
     container.value = dispose;
+    _toolset.add(Analyze(_controller));
+    _toolset.add(Collect(_controller, ProjectionsModel.single(
+      controller.projectionsModel.current.cleared
+    ), controller.vcxController));
+    _toolset.add(Plotter(
+      controller, controller.projectionsModel, controller.pipelineModel
+    ));
+
+    controller.vcxController.onRegionSelect = onRegionUpdate;
+
     WidgetsBinding.instance.addObserver(
-      WindowSizeObserver(updateScrollModel, this)
+      WindowSizeObserver(controller.updateScrollModel, this)
     );
-    projectionsModel.onSizeChange = onEntriesUpdate;
-    projectionsModel.preNotify = () => vcxController.syncColumns((name) {
-      return projectionsModel.getColumn(name, pipelineModel.getAttrTypeByName);
-    }, projectionsModel.currentLength);
-    vcxController.onRegionSelect = onRegionUpdate;
-    vcxController.onScroll = updateScrollModel;
-    evtManifold.onNewColumns = (columns) {
-      for(final column in columns) vcxController.addColumn(
-        column, projectionsModel.getColumn(
-          column, pipelineModel.getAttrTypeByName
-        )
-      );
-    };
-    dispatcher.listen(
-      Event.projectionAppend,
-      (Filter filter) => projectionsModel.append(filter)
-    );
-    dispatcher.listen(
-      Event.projectionRemove,
-      (Iterable<Filter> filter) => projectionsModel.splice(filter)
-    );
-    dispatcher.listen(
-      Event.projectionClear,
-      () => projectionsModel.clear()
-    );
-    dispatcher.listen(
+
+    controller.listen(
       Event.expandToolView,
       (Toolset tool) => expandToolView(tool)
     );
-    dispatcher.syncChannels();
+    controller.initChannels();
   }
+
 
   void onRegionUpdate(
     int startRow, int endRow, Iterable<(String, List<String?>)> columns
@@ -209,36 +103,10 @@ final class MonitorMode extends StatelessWidget {
     expandToolView(Toolset.analyze);
   }
 
-  void onEntriesUpdate(
-    int entries
-  ) => WidgetsBinding.instance.addPostFrameCallback((_) {
-    vcxController.entries = entries;
-    updateScrollModel();
-  });
-
-  void updateScrollModel() => scrollModel.setBothEdges(
-    vcxController.normalizedOffset,
-    vcxController.normalizedLowerEdge(),
-    projectionsModel.scrollReference
-  );
-
-  void onMiniMapSliderDrag(double normalizedDelta) {
-    vcxController.scroll2index(
-      scrollModel.updateByDelta(
-        normalizedDelta,
-        vcxController.normalizedHeight,
-        projectionsModel.scrollReference,
-      )
-    );
-  }
 
   void expandToolView(Toolset tool) {
     _toolHeight.value = _toolHeight.value == 0 ? 180 : _toolHeight.value.abs();
     _toolView.value = tool;
-  }
-
-  void sortBy(String attribute, bool descending) {
-    projectionsModel.sort(attribute, descending);
   }
 
   @override
@@ -272,17 +140,17 @@ final class MonitorMode extends StatelessWidget {
             Expanded(child: SizedBox(
               height: 40,
               child: ClipRect( // https://github.com/flutter/flutter/issues/153240
-                child: Unifinder(unifinderController)
+                child: Unifinder(_unifinderController)
               )
             ))
           ]
         ),
       ),
       MiniMap(
-        projectionsModel,
-        scrollModel,
-        selectionsModel,
-        onMiniMapSliderDrag,
+        _controller.projectionsModel,
+        _controller.scrollModel,
+        _controller.selectionsModel,
+        _controller.onMiniMapSliderDrag,
         108
       ),
       Expanded(child: Container(
@@ -291,14 +159,14 @@ final class MonitorMode extends StatelessWidget {
             hoverColor: ColorScheme.of(context).primary.withAlpha(60)
           ),
           child: ListenableBuilder( // Verticatrix
-            listenable: projectionsModel,
+            listenable: _controller.projectionsModel,
             builder: (context, _) => buildVerticatrix(
               ColorScheme.of(context),
               TextTheme.of(context),
-              vcxController,
-              PrimaryHeaderBuilder(this).build,
-              PrimaryRowHeaderBuilder(this).build,
-              selectionsModel,
+              _controller.vcxController,
+              PrimaryHeaderBuilder(_controller).build,
+              PrimaryRowHeaderBuilder(_controller).build,
+              _controller.selectionsModel,
               Formatter.formatters,
             )
           ),
@@ -355,9 +223,9 @@ final class MonitorMode extends StatelessWidget {
                   }
                 },
                 onPanEnd: (_) {
-                  scrollModel.setLowerEdge(
-                    vcxController.normalizedLowerEdge(),
-                    projectionsModel.scrollReference
+                  _controller.scrollModel.setLowerEdge(
+                    _controller.vcxController.normalizedLowerEdge(),
+                    _controller.projectionsModel.scrollReference
                   );
                 },
                 child: const SizedBox(height: 8,),
@@ -421,7 +289,7 @@ final class MonitorMode extends StatelessWidget {
               ByteStreamLoader.load(
                 AddressFamily.file,
                 result.path,
-                (stream) => pipelineModel.connect(schema, stream)
+                (stream) => _controller.pipelineModel.connect(schema, stream)
               );
               // TODO: notify plotter for potential new reference columns
             }
@@ -466,10 +334,9 @@ final class MonitorMode extends StatelessWidget {
   ];
 
   void dispose() {
-    pipelineModel.discard();
+    _controller.dispose();
     WidgetsBinding.instance.removeObserver(WindowSizeObserver(() {}, this));
-    unifinderController.discard();
-    vcxController.dispose();
+    _unifinderController.discard();
   }
 
   static const _void = SizedBox.shrink();

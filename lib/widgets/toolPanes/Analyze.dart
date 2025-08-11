@@ -13,10 +13,10 @@ import '../../models/AnalysisCandidates.dart';
 import '../../models/ProjectionsModel.dart';
 import '../helper/AnalyzersController.dart';
 import '../helper/Events.dart';
+import '../helper/MonitorModeController.dart';
 import '../shared/Clickable.dart';
 import '../shared/FadedSliver.dart';
 import '../shared/Hoverable.dart';
-import '../MonitorMode.dart';
 import '../Style.dart';
 
 final class ResizeState {
@@ -43,15 +43,15 @@ final class Analyze extends StatelessWidget {
     return page;
   }
 
-  Analyze(MonitorMode toplevel) {
+  Analyze(MonitorModeController mmc) {
     tabsctl.addTab(newPage());
-    toplevel.dispatcher.listen(
+    mmc.listen(
       Event.selectRegionUpdate,
       (int startRow, int endRow, Iterable<(String, List<String?>)> columns) {
         analysisCandidates.update([ for(
           final (name, column) in columns
         ) AnalysisCandidate<StringfiedView>(
-          name, toplevel.pipelineModel.getAttrTypeByName(name), column as StringfiedView
+          name, mmc.pipelineModel.getAttrTypeByName(name), column as StringfiedView
         )], startRow, endRow);
       }
     );

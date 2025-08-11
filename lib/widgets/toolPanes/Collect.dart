@@ -10,8 +10,8 @@ import '../../models/ProjectionsModel.dart';
 import '../../models/SelectionsModel.dart';
 import '../helper/Events.dart';
 import '../helper/Formatter.dart';
+import '../helper/MonitorModeController.dart';
 import '../shared/Decorations.dart';
-import '../MonitorMode.dart';
 import '../Style.dart';
 import '../ThemedWidgets.dart';
 import '../Verticell.dart';
@@ -19,11 +19,11 @@ import '../Verticatrix.dart';
 
 /// The collect tool in the toolset
 final class Collect extends StatelessWidget {
-  final MonitorMode toplevel;
+  final MonitorModeController mmc;
   final ProjectionsModel _projections;
 
-  PipelineModel get _pipeline => toplevel.pipelineModel;
-  SelectionsModel get _selections => toplevel.selectionsModel;
+  PipelineModel get _pipeline => mmc.pipelineModel;
+  SelectionsModel get _selections => mmc.selectionsModel;
 
   final _expandHeaders = ValueNotifier(true);
 
@@ -32,12 +32,12 @@ final class Collect extends StatelessWidget {
 
   static final phonyChangeNotifier = PhonyChangeNotifier();
 
-  Collect(this.toplevel, this._projections, this.linkedVcxController) {
-    toplevel.dispatcher.listen(Event.collectionAppend, (int index) {
+  Collect(this.mmc, this._projections, this.linkedVcxController) {
+    mmc.listen(Event.collectionAppend, (int index) {
       _projections.current.include([index]);
       primaryVcxController.entries = _projections.current.length;
     });
-    toplevel.dispatcher.listen(Event.collectionRemove, (int row) {
+    mmc.listen(Event.collectionRemove, (int row) {
       _projections.current.remove(row);
       primaryVcxController.entries = _projections.current.length;
     });
@@ -151,10 +151,10 @@ final class Collect extends StatelessWidget {
         primaryVcxController..syncWith(linkedVcxController)..syncColumns((id) {
           return _projections.getColumn(id, _pipeline.getAttrTypeByName);
         }, _projections.current.length),
-        expandHeaders ? CollectHeaderBuilder(
-          _projections
-        ).build : (_, _, _, _) => SizedBox.shrink(),
-        CollectRowHeaderBuilder(toplevel).build,
+        expandHeaders ?
+        CollectHeaderBuilder(mmc).build :
+        (_, _, _, _) => SizedBox.shrink(),
+        CollectRowHeaderBuilder(mmc).build,
         phonyChangeNotifier,
         Formatter.formatters,
         showHeaderBackground: expandHeaders

@@ -10,10 +10,10 @@ import '../domain/schema/AttrType.dart';
 import '../models/FiltersModel.dart';
 import '../models/ProjectionsModel.dart';
 import 'helper/Events.dart';
+import 'helper/MonitorModeController.dart';
 import 'shared/Clickable.dart';
 import 'shared/Hoverable.dart';
 import 'shared/Select.dart';
-import 'MonitorMode.dart';
 import 'Style.dart';
 import 'ThemedWidgets.dart';
 
@@ -76,7 +76,7 @@ final class ModeSwitcher extends StatelessWidget {
   );
 }
 
-extension type SearchController(MonitorMode toplevel) {
+extension type SearchController(MonitorModeController mmc) {
   Iterable<int> search(
     TextEditingController input, ValueNotifier<bool> caseSensitive
   ) sync* {
@@ -86,19 +86,19 @@ extension type SearchController(MonitorMode toplevel) {
     while(true) {
       final (prevColumnIndex, prevRowIndex) = (columnIndex, rowIndex);
       if(keyword != input.text) {
-        toplevel.selectionsModel.clear();
+        mmc.selectionsModel.clear();
         columnIndex = rowIndex = 0;
         keyword = input.text;
         lowerCaseKeyword = keyword.toLowerCase();
       }
-      final columns = toplevel.vcxController.visibleColumns;
-      if(rowIndex >= toplevel.vcxController.entries) {
+      final columns = mmc.vcxController.visibleColumns;
+      if(rowIndex >= mmc.vcxController.entries) {
         ++columnIndex;
         rowIndex = 0;
       }
       if(columnIndex >= columns.length) columnIndex = 0;
       final (columnName, columnEntries) = columns[columnIndex];
-      final type = toplevel.pipelineModel.getAttrTypeByName(columnName);
+      final type = mmc.pipelineModel.getAttrTypeByName(columnName);
       if(type == AttrType.string) {
         rowIndex = columnEntries.indexWhere(_matcher(
           keyword, lowerCaseKeyword, caseSensitive
@@ -107,10 +107,10 @@ extension type SearchController(MonitorMode toplevel) {
         columnEntries as StringfiedView
       ).typedView.indexWhere(type.from(keyword).matches, rowIndex + 1);
       if(rowIndex != -1) {
-        toplevel.selectionsModel.add(
-          toplevel.projectionsModel.current.indexAt(rowIndex)
+        mmc.selectionsModel.add(
+          mmc.projectionsModel.current.indexAt(rowIndex)
         );
-        toplevel.vcxController.highlight(rowIndex, columnName);
+        mmc.vcxController.highlight(rowIndex, columnName);
         yield rowIndex;
       } else { // search reached the end of a column
         ++columnIndex;
@@ -144,13 +144,13 @@ extension on Comparable {
 
 final class UnifinderController {
   factory UnifinderController(
-    MonitorMode toplevel, EventDispatcher dispatcher, [ String keyword = ""]
+    MonitorModeController mmc, [ String keyword = ""]
   ) => UnifinderController._(
     ValueNotifier(true),
-    TagsEditingController(dispatcher),
+    TagsEditingController(mmc),
     TextEditingController(text: keyword),
-    SearchController(toplevel),
-    dispatcher
+    SearchController(mmc),
+    mmc
   );
 
   UnifinderController._(
@@ -158,11 +158,11 @@ final class UnifinderController {
     this.tagsEditingController,
     this.textEditingController,
     SearchController searchController,
-    EventDispatcher dispatcher,
+    MonitorModeController mmc,
   ): _searching = searchController.search(
     textEditingController, _case
   ).iterator {
-    dispatcher.listen(Event.filterAppend, (_) {
+    mmc.listen(Event.filterAppend, (_) {
       if(_mode.value != Mode.filter) _mode.value = Mode.filter;
     });
   }
@@ -195,9 +195,9 @@ final class Unifinder extends StatelessWidget {
 
   static const _vPadding = 1.5;
 
-  Unifinder(this.controller);
-
   final _scrollController = ScrollController();
+
+  Unifinder(this.controller);
 
   @override
   Widget build(BuildContext context) => ValueListenableBuilder(
@@ -286,15 +286,15 @@ final class Unifinder extends StatelessWidget {
 
 final class TagsEditingController
   extends TextEditingController with FiltersModel {
-  TagsEditingController(EventDispatcher dispatcher, {
+  TagsEditingController(MonitorModeController mmc, {
     String? text
-  }): _projectionAppendCh = dispatcher.getChannel(Event.projectionAppend),
-    _projectionRemoveCh = dispatcher.getChannel(Event.projectionRemove),
-    _projectionClearCh = dispatcher.getChannel(Event.projectionClear),
+  }): _projectionAppendCh = mmc.getChannel(Event.projectionAppend),
+    _projectionRemoveCh = mmc.getChannel(Event.projectionRemove),
+    _projectionClearCh = mmc.getChannel(Event.projectionClear),
     super.fromValue(
     text == null ? TextEditingValue.empty : TextEditingValue(text: text)
   ) {
-    dispatcher.listen(Event.filterAppend, (Filter filter) {
+    mmc.listen(Event.filterAppend, (Filter filter) {
       appendFilter(filter);
       _projectionAppendCh.notify(filter);
     });

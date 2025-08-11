@@ -4,7 +4,7 @@
 // can be found in the COPYRIGHT file.
 
 import '../../models/FiltersModel.dart';
-import '../MonitorMode.dart';
+import '../helper/MonitorModeController.dart';
 import 'EventDispatcher.dart';
 export 'EventDispatcher.dart';
 

@@ -13,9 +13,9 @@ import '../models/ProjectionsModel.dart';
 import '../models/SelectionsModel.dart';
 import 'helper/Events.dart';
 import 'helper/FilterMode.dart';
+import 'helper/MonitorModeController.dart';
 import 'shared/Extensions.dart';
 import 'shared/Select.dart';
-import 'MonitorMode.dart';
 import 'Style.dart';
 
 extension WithTooltip on Widget {
@@ -45,7 +45,7 @@ extension type Header._(Container container) implements Widget {
     String columnName,
     TextStyle style,
     double height,
-    ProjectionsModel projectionsModel
+    MonitorModeController mmc
   ): container = Container(
     height: height,
     color: ColorScheme.of(context).surface,
@@ -54,7 +54,7 @@ extension type Header._(Container container) implements Widget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(columnName, style: TextTheme.of(context).bodyMedium),
-        switch(projectionsModel.current.currentlySortedBy) {
+        switch(mmc.currentProjection.currentlySortedBy) {
           (final column, true) => column == columnName ? Icon(
             Icons.arrow_drop_down,
             color: ColorScheme.of(context).onSurfaceVariant,
@@ -72,29 +72,31 @@ extension type Header._(Container container) implements Widget {
   );
 }
 
-extension type PrimaryHeaderBuilder(MonitorMode toplevel) {
+extension type PrimaryHeaderBuilder(MonitorModeController mmc) {
   Widget build(
     BuildContext context,
     String columnName,
     TextStyle style,
     double height
   ) => columnName.isNotEmpty ? Header(
-    context, columnName, style, height, toplevel.projectionsModel
-  ).withTooltip(context, HeaderTray(columnName, toplevel)) : Header(
-    context, columnName, style, height, toplevel.projectionsModel
+    context, columnName, style, height, mmc
+  ).withTooltip(context, HeaderTray(columnName, mmc)) : Header(
+    context, columnName, style, height, mmc
   );
 }
 
-extension type CollectHeaderBuilder(ProjectionsModel projections) {
+extension type CollectHeaderBuilder(MonitorModeController mmc) {
   Widget build(
     BuildContext context,
     String columnName,
     TextStyle style,
     double height
   ) => columnName.isNotEmpty ? Header(
-    context, columnName, style, height, projections
-  ).withTooltip(context, CollectHeaderTray(projections, columnName)) : Header(
-    context, columnName, style, height, projections
+    context, columnName, style, height, mmc
+  ).withTooltip(
+    context, CollectHeaderTray(mmc.projectionsModel, columnName)
+  ) : Header(
+    context, columnName, style, height, mmc
   );
 }
 
@@ -136,7 +138,7 @@ enum HeaderTrayMode { normal, filterEdit }
 final class HeaderTray extends StatelessWidget {
   final _mode = ValueNotifier(HeaderTrayMode.normal);
   final _filterMode = ValueNotifier(FilterMode.equality);
-  final MonitorMode toplevel;
+  final MonitorModeController mmc;
   final String attribute;
   final Channel<Notifer1<String>> _newTraceCh;
   final Channel<Notifer1<Filter>> _filterAppendCh;
@@ -153,10 +155,10 @@ final class HeaderTray extends StatelessWidget {
   );
 
   HeaderTray(
-    this.attribute, this.toplevel
-  ): _newTraceCh = toplevel.dispatcher.getChannel(Event.newTrace),
-    _filterAppendCh = toplevel.dispatcher.getChannel(Event.filterAppend),
-    _expandToolViewCh = toplevel.dispatcher.getChannel(Event.expandToolView);
+    this.attribute, this.mmc
+  ): _newTraceCh = mmc.getChannel(Event.newTrace),
+    _filterAppendCh = mmc.getChannel(Event.filterAppend),
+    _expandToolViewCh = mmc.getChannel(Event.expandToolView);
 
   void exitFilterEdit() {
     _timer..onData(null)..pause();
@@ -165,7 +167,7 @@ final class HeaderTray extends StatelessWidget {
   }
 
   void filterEditSubmit(String predicate) {
-    final attr = toplevel.pipelineModel.getAttributeByName(attribute);
+    final attr = mmc.pipelineModel.getAttributeByName(attribute);
     if(_filterMode.value.buildFilter(
       predicate.trim(), attr
     ) case final SingleAttributeFilter filter) {
@@ -198,15 +200,15 @@ final class HeaderTray extends StatelessWidget {
               })..resume();
             },
           ),
-          SortButton(toplevel.projectionsModel, attribute, false /* ascending */),
-          SortButton(toplevel.projectionsModel, attribute, true /* descending */),
+          SortButton(mmc.projectionsModel, attribute, false /* ascending */),
+          SortButton(mmc.projectionsModel, attribute, true /* descending */),
           IconButton( // add a trace to plot with the data in this column
             icon: Icon(
               Icons.area_chart, color: ColorScheme.of(context).onSurface
             ),
             style: _buttonStyle,
             onPressed: () {
-              final type = toplevel.pipelineModel.getAttrTypeByName(attribute);
+              final type = mmc.pipelineModel.getAttrTypeByName(attribute);
               if(type.allowCast<num>()) {
                 _expandToolViewCh.notify(Toolset.plotter);
                 _newTraceCh.notify(attribute);
@@ -310,18 +312,18 @@ final class CollectHeaderTray extends StatelessWidget {
 }
 
 final class PrimaryRowHeaderBuilder {
-  final MonitorMode toplevel;
+  final MonitorModeController mmc;
   final Channel<Notifer1<Toolset>> _expandToolViewCh;
   final Channel<Notifer1<int>> _collectionAppendCh;
 
-  PrimaryRowHeaderBuilder(this.toplevel):
-    _expandToolViewCh = toplevel.dispatcher.getChannel(Event.expandToolView),
-    _collectionAppendCh = toplevel.dispatcher.getChannel(Event.collectionAppend);
+  PrimaryRowHeaderBuilder(this.mmc):
+    _expandToolViewCh = mmc.getChannel(Event.expandToolView),
+    _collectionAppendCh = mmc.getChannel(Event.collectionAppend);
 
-  int rawIndex(int rowIndex) => toplevel.projectionsModel.current.indexAt(rowIndex);
+  int rawIndex(int rowIndex) => mmc.currentProjection.indexAt(rowIndex);
 
   Widget build(BuildContext context, int rowIndex) => GestureDetector(
-    onTap: () => toplevel.selectionsModel.add(rawIndex(rowIndex)),
+    onTap: () => mmc.selectionsModel.add(rawIndex(rowIndex)),
     child: Container(
       alignment: Alignment.centerLeft,
       color: selectedOrNot(
@@ -354,7 +356,7 @@ final class PrimaryRowHeaderBuilder {
 
   T selectedOrNot<I, T>(
     int rowIndex, I interm, T selected(I interm), T unselected(I interm)
-  ) => toplevel.selectionsModel.isSelected(
+  ) => mmc.selectionsModel.isSelected(
     rawIndex(rowIndex)
   ) ? selected(interm) : unselected(interm);
 }
@@ -363,8 +365,8 @@ final class CollectRowHeaderBuilder {
   final Channel<Notifer1<int>> _collectionRemoveCh;
 
   CollectRowHeaderBuilder(
-    MonitorMode toplevel
-  ): _collectionRemoveCh = toplevel.dispatcher.getChannel(Event.collectionRemove);
+    MonitorModeController mmc
+  ): _collectionRemoveCh = mmc.getChannel(Event.collectionRemove);
 
   Widget build(BuildContext context, int rowIndex) => Container(
     alignment: Alignment.centerLeft,

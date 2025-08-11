@@ -13,6 +13,7 @@ import '../../models/PlotterModel.dart';
 import '../../models/PipelineModel.dart';
 import '../../models/ProjectionsModel.dart';
 import '../helper/Events.dart';
+import '../helper/MonitorModeController.dart';
 import '../shared/Clickable.dart';
 import '../shared/Extensions.dart';
 import '../shared/Decorations.dart';
@@ -28,8 +29,8 @@ enum LineType {
 
 
 final class Plotter extends StatelessWidget {
-  Plotter(EventDispatcher dispatcher, this._projectionsModel, this._pipelineModel) {
-    dispatcher.listen(Event.newTrace, (String attr) {
+  Plotter(MonitorModeController mmc, this._projectionsModel, this._pipelineModel) {
+    mmc.listen(Event.newTrace, (String attr) {
       _plotterModel.addTrace(attr);
     });
   }
