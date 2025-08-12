@@ -221,5 +221,7 @@ final class AbsoluteTimeColumnView extends StringfiedView<int> {
   AttrType get attrType => AttrType.string;
 
   @override
-  String stringfy(int value) => DateTime.fromMicrosecondsSinceEpoch(value).toString();
+  String stringfy(int value) => DateTime.fromMicrosecondsSinceEpoch(
+    value, isUtc: true
+  ).toString();
 }
