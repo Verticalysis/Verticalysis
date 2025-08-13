@@ -126,7 +126,6 @@ extension type const RelativeTime(int us) {
 extension type const AbsoluteTime(int usSinceEpoch) {
   bool get isInvalid => this == RelativeTime.invalid;
   bool get isIncomplete => this == RelativeTime.incomplete;
-  DateTime get dateTime => DateTime.fromMicrosecondsSinceEpoch(usSinceEpoch);
 
   /// Parse a [AbsoluteTime] from the iterator of a char code [Iterable]
   /// Recognizes following formats by heuristics:
@@ -213,9 +212,19 @@ extension type const AbsoluteTime(int usSinceEpoch) {
     return -2;
   }
 
-  static AbsoluteTime fromYMDus(
-    int y, int m, int d, int us
-  ) => AbsoluteTime(DateTime(y, m, d, 0, 0, 0, 0, us).microsecondsSinceEpoch);
+  /// Ported from
+  /// https://github.com/protocolbuffers/upb/blob/22182e6e/upb/json/parser.rl#L1697
+  static AbsoluteTime fromYMDus(int year, int month, int day, int us) {
+    const monthYday = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+
+    final int yearAdj = year + 4800; // Ensure positive, multiple of 400.
+    final int febs = yearAdj - (month <= 2 ? 1 : 0); // Februaries since base.
+    final int leapDays = 1 + (febs ~/ 4) - (febs ~/ 100) + (febs ~/ 400);
+    final int days = 365 * yearAdj + leapDays + monthYday[month - 1] + day - 1;
+    final int epochDays = days - 2472692; // Adjust to Unix epoch.
+
+    return AbsoluteTime(epochDays * 86400000000 + us);
+  }
 
   static int daysInUs(int days) => days * Duration.microsecondsPerDay;
 
