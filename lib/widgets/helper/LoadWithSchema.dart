@@ -11,7 +11,7 @@ import 'package:flutter_platform_alert/flutter_platform_alert.dart';
 import '../../domain/byteStream/ByteStream.dart';
 import '../../domain/schema/Schema.dart';
 import '../../models/SchemasModel.dart';
-import '../../utils/Extensions.dart';
+import '../../utils/FileSystem.dart';
 
 extension LoadWithSchema on SchemasModel {
   Future<bool> addSchemaNoThrow(String path) async {

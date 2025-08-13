@@ -12,7 +12,7 @@ import 'package:tabbed_view/tabbed_view.dart';
 import '../domain/byteStream/ByteStream.dart';
 import '../domain/schema/Schema.dart';
 import '../models/SchemasModel.dart';
-import '../utils/Extensions.dart';
+import '../utils/FileSystem.dart';
 import 'helper/LoadWithSchema.dart';
 import 'shared/Clickable.dart';
 import 'shared/Hoverable.dart';
