@@ -478,7 +478,6 @@ final class Verticatrix extends StatelessWidget {
                   );
                 },
                 child: SizedBox(
-                  height: cellHeight,
                   width: columnWidth,
                   child: headerBuilder(
                     context,
