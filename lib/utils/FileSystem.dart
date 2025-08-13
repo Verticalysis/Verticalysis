@@ -18,3 +18,10 @@ extension type Path(String path) {
     final int extensionStart => path.substring(extensionStart)
   };
 }
+
+extension DirectoryEnhancements on Directory {
+  String get sep => Platform.pathSeparator;
+  Future<Directory> createChild(String subdir) => Directory(
+    "$path$sep$subdir"
+  ).create(recursive: true);
+}

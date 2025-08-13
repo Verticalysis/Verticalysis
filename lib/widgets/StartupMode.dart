@@ -10,7 +10,6 @@ import 'package:yaml/yaml.dart';
 import 'package:tabbed_view/tabbed_view.dart';
 
 import '../domain/byteStream/ByteStream.dart';
-import '../domain/schema/Schema.dart';
 import '../models/SchemasModel.dart';
 import '../utils/FileSystem.dart';
 import 'helper/LoadWithSchema.dart';
@@ -18,7 +17,6 @@ import 'shared/Clickable.dart';
 import 'shared/Hoverable.dart';
 import 'shared/Select.dart';
 import 'MonitorMode.dart';
-import 'SchemasList.dart';
 import 'ThemedWidgets.dart';
 import 'Style.dart';
 
@@ -43,18 +41,10 @@ final class StartupMode extends StatelessWidget {
       _ => ast.value as R
     });
   }), _editController = TextEditingController(text: src) {
-    if(src.isNotEmpty) WidgetsBinding.instance.addPostFrameCallback((_) {
+    if(src.isNotEmpty) WidgetsFlutterBinding.ensureInitialized().addPostFrameCallback((_) {
       Future.delayed(const Duration(milliseconds: 300), _schemaSelectorControler.open);
     });
   }
-
-  /*void open(Schema schema, String schemaName) { // Exceptions handled in [SchemasList]
-    if(filePathNotifier.value.isEmpty) return;
-    ByteStreamLoader.load(filePathNotifier.value, (src) {
-      container.text = src.label(schemaName);
-      container.content = MonitorMode(src, schema, schemasModel, container);
-    });
-  }*/
 
   @override
   Widget build(BuildContext context) => Center(

@@ -3,31 +3,27 @@
 // GPLv3 license. Use of this file is governed by terms and conditions that
 // can be found in the COPYRIGHT file.
 
-import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:tabbed_view/tabbed_view.dart';
-
-import '../domain/schema/FlatDirSchList.dart';
+import 'helper/Launcher.dart';
 import 'shared/Extensions.dart';
-import 'StartupMode.dart';
 import 'Style.dart';
 
 typedef TabDtor = void Function();
 
 final class Scaffold extends StatelessWidget {
   final tabsctl = TabbedViewController([]);
-  final bool useTmpSchDir;
+  final Launcher _launcher;
 
   static const _startupPageTitle = "Welcome";
   static const _tabRadius = BorderRadius.only(
     topLeft: Radius.circular(10.0), topRight: Radius.circular(10.0)
   );
 
-  Scaffold({ required this.useTmpSchDir, String src = "", super.key }) {
-    tabsctl.newPage(_startupPageTitle, startUpPage, src: src);
+  Scaffold(this._launcher, { String src = "", super.key }) {
+    tabsctl.newPage(_startupPageTitle, _launcher.launch, src: src);
   }
 
   @override
@@ -40,7 +36,7 @@ final class Scaffold extends StatelessWidget {
           selectToEnableButtons: false,
           tabCloseInterceptor: (index, tabData) {
             if(tabsctl.length == 1) {
-              tabsctl.newPage(_startupPageTitle, startUpPage);
+              tabsctl.newPage(_startupPageTitle, _launcher.launch);
             } else {
               (tabData.value as TabDtor)();
               final selected = tabsctl.selectedIndex!;
@@ -63,25 +59,13 @@ final class Scaffold extends StatelessWidget {
         child: Row(
           children: [
             Expanded(child: MoveWindow()),
-            NewTabButton(tabsctl, startUpPage, title: _startupPageTitle),
+            NewTabButton(tabsctl, _launcher.launch, title: _startupPageTitle),
             const WindowButtons()
           ],
         ),
       ),
     ]
   );
-
-  Future<Widget> startUpPage(TabData tab, { String src = ""}) async {
-    try {
-      final schDir = useTmpSchDir ?
-        await getTemporaryDirectory() :
-        await getApplicationDocumentsDirectory();
-
-      return StartupMode(FlatDirSchSet(schDir), tab, src: src);
-    } catch(e) {
-      return StartupMode({}, tab, src: src);
-    }
-  }
 
   static TabbedViewThemeData tabCosmeticFromTheme(
     ColorScheme scheme
@@ -117,20 +101,18 @@ final class Scaffold extends StatelessWidget {
 }
 
 extension on TabbedViewController {
-  void newPage(String title, Future<Widget> builder(TabData tab, { String src }), {
+  void newPage(String title, Widget builder(TabData tab, { String src }), {
     String src = ""
   }) => this.addTab(TabData(
     text: title,
     value: () {},
-  )..postConstruct((tab) => builder(tab, src: src).then((page) {
-      tab.content = page;
-  })));
+  )..postConstruct((tab) => tab.content = builder(tab, src: src)));
 }
 
 extension type NewTabButton._(WindowButton button) implements WindowButton{
   NewTabButton(
     TabbedViewController tabsctl,
-    Future<Widget> builder(TabData tab, { String src }),
+    Widget builder(TabData tab, { String src }),
     { Key? key, String title = "", bool animate = false }
   ): button = WindowButton(
     key: key,

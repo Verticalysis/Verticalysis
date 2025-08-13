@@ -8,6 +8,7 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter_acrylic/flutter_acrylic.dart';
 import 'package:flutter/material.dart' hide Scaffold;
 
+import 'widgets/helper/Launcher.dart';
 import 'widgets/Scaffold.dart';
 import 'widgets/Style.dart';
 
@@ -23,12 +24,13 @@ void main(List<String> args) async {
       color: Color(0xCC222222),
     );*/
     final options = parser.parse(args);
+    final launcher = await Launcher.create(debugMode: options.flag('debug'));
     if(options.rest case [ final path, ...final remainder ]) {
       if(remainder.isNotEmpty) return printHints("Only one source can be supplied");
       if(options.option('schema') case final String schema) {
 
-      } else runApp(launch(options.flag('debug'), src: path));
-    } else runApp(launch(options.flag('debug')));
+      } else runApp(launch(launcher, src: path));
+    } else runApp(launch(launcher));
     doWhenWindowReady(() {
      const initialSize = const Size(800, 600);
      appWindow.minSize = const Size(640, 480);
@@ -49,10 +51,10 @@ void printHints(String? error) => print(
   "      open the provided source with the schema of schema-name"
 );
 
-Widget launch(bool debug, { String src = "" }) => MaterialApp(
+Widget launch(Launcher launcher, { String src = "" }) => MaterialApp(
   color: const Color(0x00000000),
   title: 'Flutter Demo',
   theme: lightColorTheme,
   // TODO: darkTheme: ,
-  home: Material(child: Scaffold(useTmpSchDir: debug, src: src)),
+  home: Material(child: Scaffold(launcher, src: src)),
 );
