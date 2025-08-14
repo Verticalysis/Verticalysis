@@ -7,6 +7,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_platform_alert/flutter_platform_alert.dart';
+import 'package:flutter/services.dart';
 
 import '../models/FiltersModel.dart';
 import '../models/ProjectionsModel.dart';
@@ -324,7 +325,7 @@ final class PrimaryRowHeaderBuilder {
   int rawIndex(int rowIndex) => mmc.currentProjection.indexAt(rowIndex);
 
   Widget build(BuildContext context, int rowIndex) => GestureDetector(
-    onTap: () => mmc.selectionsModel.add(rawIndex(rowIndex)),
+    onTap: () => onClick(rowIndex),
     child: Container(
       alignment: Alignment.centerLeft,
       color: selectedOrNot(
@@ -354,6 +355,20 @@ final class PrimaryRowHeaderBuilder {
       )
     )
   );
+
+  void onClick(int rowIndex) {
+    final isSelected = mmc.selectionsModel.isSelected(rawIndex(rowIndex));
+    final isControlPressed = HardwareKeyboard.instance.isControlPressed;
+    final isMultipleSelect = mmc.selectionsModel.count > 1;
+    if(!isControlPressed) mmc.selectionsModel.clear();
+    if(!isSelected) {
+      mmc.selectionsModel.add(rawIndex(rowIndex));
+    } else if(isControlPressed) { // remove selected when ctrl is pressed
+      mmc.selectionsModel.remove(rawIndex(rowIndex));
+    } else if(isMultipleSelect) { // switch to single select from multi-select
+      mmc.selectionsModel.add(rawIndex(rowIndex));
+    }
+  }
 
   T selectedOrNot<I, T>(
     int rowIndex, I interm, T selected(I interm), T unselected(I interm)
