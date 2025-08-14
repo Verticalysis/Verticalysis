@@ -17,6 +17,11 @@ final class SelectionsModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  void addAll(Iterable<int> indices) {
+    _selectedIndices.addAll(indices);
+    notifyListeners();
+  }
+
   void remove(int index) {
     _selectedIndices.remove(index);
     notifyListeners();

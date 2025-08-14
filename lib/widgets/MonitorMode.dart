@@ -304,10 +304,14 @@ final class MonitorMode extends StatelessWidget {
     MenuItemButton(
       style: menuItemStyle,
       child: Text("Select all entries", style: itemStyle),
+      onPressed: () => _controller.selectionsModel.addAll(
+        _controller.currentProjection.rawIndex
+      )
     ),
     MenuItemButton(
       style: menuItemStyle,
       child: Text("Unselect all entries", style: itemStyle),
+      onPressed: () => _controller.selectionsModel.clear()
     ),
     SubmenuButton(
       style: menuItemStyle,

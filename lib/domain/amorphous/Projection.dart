@@ -27,6 +27,8 @@ class Projection {
 
   Projection get cleared => Projection(_columns, ListIndex([], ""));
 
+  Iterable<int> get rawIndex => _index;
+
   int get length => _index.length;
 
   /// If [sort] was called on this Projection, returns the attribute's name
