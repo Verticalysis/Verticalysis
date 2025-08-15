@@ -12,6 +12,7 @@ import '../../domain/byteStream/ByteStream.dart';
 import '../../domain/schema/Schema.dart';
 import '../../models/SchemasModel.dart';
 import '../../utils/FileSystem.dart';
+import 'Events.dart';
 
 extension LoadWithSchema on SchemasModel {
   Future<bool> addSchemaNoThrow(String path) async {
@@ -118,9 +119,12 @@ extension ByteStreamLoader on ByteStream {
   /// The label to be displayed as the title of the tab
   String label(String schemaName) => "$resourceName - $schemaName";
 
-  static void load(AddressFamily type, String path, void onSuccess(ByteStream stream)) {
+  static void load(AddressFamily type, String path, void onSuccess(
+    ByteStream stream, Channel strmIntr
+  )) {
+    final strmIntr = Channel(Event.sourceLinkDown);
     try {
-      onSuccess(type.resolve(path));
+      onSuccess(type.resolve(path, strmIntr.notify), strmIntr);
     } on InvalidAddressException catch(e) {
       alertOpenStreamError("Not a valid address: ${e.reason}");
     } catch(e) {

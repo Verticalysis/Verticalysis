@@ -59,16 +59,22 @@ final class MonitorMode extends StatelessWidget {
   )>>> _selectRegionUpdateCh;
 
   MonitorMode(
-    ByteStream stream, Schema schema, SchemasModel schemas, TabData container
+    ByteStream stream,
+    Schema schema,
+    SchemasModel schemas,
+    TabData container,
+    List<Channel> channels
   ): this._(MonitorModeController(
     stream,
     schema,
     EventManifold(onStreamError),
     EventDispatcher(Event.values),
-  ), schemas, container);
+  )..attachChannels(channels), schemas, container);
 
   MonitorMode._(
-    MonitorModeController controller, this.schemasModel, TabData container
+    MonitorModeController controller,
+    this.schemasModel,
+    TabData container,
   ): _selectRegionUpdateCh = controller.getChannel(Event.selectRegionUpdate),
    _controller = controller,
    _unifinderController = UnifinderController(controller),
@@ -289,7 +295,10 @@ final class MonitorMode extends StatelessWidget {
               ByteStreamLoader.load(
                 AddressFamily.file,
                 result.path,
-                (stream) => _controller.pipelineModel.connect(schema, stream)
+                (stream, strmIntr) {
+                  _controller.pipelineModel.connect(schema, stream);
+                  _controller.attachChannels([ strmIntr ]);
+                }
               );
               // TODO: notify plotter for potential new reference columns
             }

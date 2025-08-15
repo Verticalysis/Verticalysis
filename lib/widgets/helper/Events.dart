@@ -3,6 +3,8 @@
 // GPLv3 license. Use of this file is governed by terms and conditions that
 // can be found in the COPYRIGHT file.
 
+import 'dart:async';
+
 import '../../models/FiltersModel.dart';
 import '../helper/MonitorModeController.dart';
 import 'EventDispatcher.dart';
@@ -21,7 +23,8 @@ enum Event<T extends Function> implements Topic<T> {
   selectionRemove(notifier1<int>),
   collectionAppend(notifier1<int>),
   collectionRemove(notifier1<int>),
-  expandToolView(notifier1<Toolset>);
+  expandToolView(notifier1<Toolset>),
+  sourceLinkDown(notifier3<String, Exception, Completer<bool>>);
 
   const Event(this._notifer);
 

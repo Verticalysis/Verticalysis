@@ -75,6 +75,10 @@ final class MonitorModeController {
     Topic<T> topic
   ) => dispatcher.getChannel(topic);
 
+  void attachChannels(List<Channel> channels) {
+    for(final channel in channels) dispatcher.attachChannel(channel);
+  }
+
   void initChannels() => dispatcher.syncChannels();
 
   void onEntriesUpdate(

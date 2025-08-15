@@ -152,11 +152,11 @@ final class StartupMode extends StatelessWidget {
                     loadWithSchema(_mode.value, schema);
                   } else if(_editController.text.isNotEmpty) ByteStreamLoader.load(
                     _mode.value, _editController.text,
-                    (src) {
+                    (src, strmIntr) {
                       final schema = LoadWithSchema.resolveGenericSchema(src.resourceName);
                       if(schema == null) return;
                       container.text = src.label(schema.name);
-                      container.content = MonitorMode(src, schema, schemasModel, container);
+                      container.content = MonitorMode(src, schema, schemasModel, container, [ strmIntr ]);
                       discard();
                     }
                   );
@@ -173,9 +173,9 @@ final class StartupMode extends StatelessWidget {
   bool loadWithSchema(AddressFamily type, String schema) {
     if(_editController.text.isEmpty) return false;
     return schemasModel.getSchemaNoThrow(schema, (sch, _) async {
-      ByteStreamLoader.load(type, _editController.text, (src) {
+      ByteStreamLoader.load(type, _editController.text, (src, strmIntr) {
         container.text = src.label(schema);
-        container.content = MonitorMode(src, sch, schemasModel, container);
+        container.content = MonitorMode(src, sch, schemasModel, container, [ strmIntr ]);
         discard();
       });
     });
