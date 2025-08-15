@@ -117,7 +117,12 @@ extension ByteStreamLoader on ByteStream {
   String get resourceName => Uri.parse(identifier).pathSegments.last;
 
   /// The label to be displayed as the title of the tab
-  String label(String schemaName) => "$resourceName - $schemaName";
+  String label(String schemaName) {
+    final uri = Uri.parse(identifier);
+    if(uri.pathSegments case [..., final resourceName]) {
+      return "$resourceName - $schemaName";
+    } else return "${uri.origin} - $schemaName";
+  }
 
   static void load(AddressFamily type, String path, void onSuccess(
     ByteStream stream, Channel strmIntr

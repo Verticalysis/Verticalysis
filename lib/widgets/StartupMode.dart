@@ -286,7 +286,7 @@ extension on AddressFamily {
   IconData get icon => _icons[this.index];
 
   static const _hints = [
-    "Type in or pick a path", "url"
+    "Type in or pick a path", "tcp://..."
   ];
 
   static const _icons = [

@@ -6,6 +6,7 @@
 import 'dart:async';
 
 import 'QuiescentFileStream.dart';
+import 'SocketStream.dart';
 
 typedef InterruptNotifier = void Function(
   String streamId,
@@ -25,8 +26,17 @@ enum AddressFamily {
   static ByteStream _resolveFile(
     String addr, InterruptNotifier _
   ) => QuiescentFileStream(addr);
-  static ByteStream _resolveHost(String addr , InterruptNotifier notifier) {
-    throw UnimplementedError("");
+  static ByteStream _resolveHost(String addr, InterruptNotifier notifier) {
+    try {
+      final uri = Uri.parse(addr);
+      if(uri.isScheme("TCP")) {
+        if(!uri.hasPort) throw InvalidAddressException("Missing port number");
+        if(uri.port > 65536) throw InvalidAddressException("Port number out of range");
+        return TCPStream(uri, notifier);
+      } else throw InvalidAddressException("Unsupported protocol: ${uri.scheme}");
+    } on FormatException catch(e) {
+      throw InvalidAddressException(e.message);
+    }
   }
 }
 
