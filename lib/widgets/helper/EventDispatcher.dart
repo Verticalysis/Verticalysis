@@ -37,9 +37,13 @@ final class EventDispatcher {
 
   Channel<T> getChannel<T extends Function>(Topic<T> topic) {
     final channel = Channel(topic);
+    attachChannel(channel);
+    return channel;
+  }
+
+  void attachChannel(Channel channel) {
     channel.listeners =_listeners;
     _channels.add(channel);
-    return channel;
   }
 
   void listen<T extends Function>(
@@ -77,4 +81,3 @@ void Function(T1 _, T2 _, T3 _) notifier3<T1, T2, T3>(
 ) => (a1, a2, a3) {
   for(final listener in listeners) listener(a1, a2, a3);
 };
-
