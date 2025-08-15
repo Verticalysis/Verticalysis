@@ -8,7 +8,7 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:linked_scroll_controller/linked_scroll_controller.dart';
+import 'package:verticalysis_linked_scroll_controller/linked_scroll_controller.dart';
 
 import '../utils/EnhancedPatterns.dart';
 
@@ -331,7 +331,7 @@ final class Verticatrix extends StatelessWidget {
         ),
         Expanded(child: Scrollbar( // Scrollable Columns Area
           controller: controller.horizontalController,
-            child: SingleChildScrollView(
+          child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             controller: controller.horizontalController,
             child: ScrollConfiguration(

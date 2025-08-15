@@ -33,13 +33,18 @@ dependencies:
   flutter_acrylic: ^1.1.0
   flutter_platform_alert: ^0.7.0
   json_dynamic_widget: ^10.0.0
-  linked_scroll_controller: ^0.2.0
   material_symbols_icons: ^4.2815.0
   msix: ^3.16.0
   path_provider: ^2.1.0
   provider: ^6.1.0
   shared_preferences: ^2.5.0
   sliver_sticky_collapsable_panel: ^3.0.0
+
+  verticalysis_linked_scroll_controller:
+    git:
+      url: https://github.com/Verticalysis/verticalysis_linked_scroll_controller
+      ref: master
+      path: ./
 
   charts_flutter:
     git:
