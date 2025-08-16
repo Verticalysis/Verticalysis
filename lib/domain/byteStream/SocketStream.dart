@@ -51,5 +51,8 @@ final class TCPStream extends RecoverableByteStream with SocketStream {
   @override
   String get identifier => address.toString();
 
+  @override
+  String get descriptor => "${address.host}: ${address.port}";
+
   Future<Socket> connect() => Socket.connect(address.host, address.port);
 }

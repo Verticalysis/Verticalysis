@@ -46,7 +46,11 @@ final class InvalidAddressException implements Exception {
 }
 
 abstract class ByteStream {
+  /// An internal label uniquely identifies the source session-wide
   String get identifier;
+  /// A shorter, informative label visible to the user, in places like the tab
+  String get descriptor;
+  /// Stream of byte sequences
   Stream<List<int>> get events;
 }
 

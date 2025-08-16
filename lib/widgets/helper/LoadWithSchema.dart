@@ -9,6 +9,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter_platform_alert/flutter_platform_alert.dart';
 
 import '../../domain/byteStream/ByteStream.dart';
+import '../../domain/byteStream/QuiescentFileStream.dart';
 import '../../domain/schema/Schema.dart';
 import '../../models/SchemasModel.dart';
 import '../../utils/FileSystem.dart';
@@ -114,15 +115,14 @@ extension LoadWithSchema on SchemasModel {
 }
 
 extension ByteStreamLoader on ByteStream {
-  String get resourceName => Uri.parse(identifier).pathSegments.last;
+  /// For file-extension-based format deduction
+  String get resourceName => switch(this) {
+    final QuiescentFileStream _ => Path(this.identifier).fileName,
+    _ => ""
+  };
 
   /// The label to be displayed as the title of the tab
-  String label(String schemaName) {
-    final uri = Uri.parse(identifier);
-    if(uri.pathSegments case [..., final resourceName]) {
-      return "$resourceName - $schemaName";
-    } else return "${uri.origin} - $schemaName";
-  }
+  String label(String schemaName) => "$descriptor - $schemaName";
 
   static void load(AddressFamily type, String path, void onSuccess(
     ByteStream stream, Channel strmIntr

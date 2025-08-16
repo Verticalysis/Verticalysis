@@ -5,6 +5,7 @@
 
 import 'dart:io';
 
+import '../../utils/FileSystem.dart';
 import 'ByteStream.dart';
 
 final class QuiescentFileStream extends ByteStream {
@@ -19,5 +20,5 @@ final class QuiescentFileStream extends ByteStream {
   String get identifier => _path;
 
   @override
-  Future<int> get size => File(_path).length();
+  String get descriptor => Path(_path).fileName;
 }
