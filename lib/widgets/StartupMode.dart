@@ -286,10 +286,10 @@ extension on AddressFamily {
   IconData get icon => _icons[this.index];
 
   static const _hints = [
-    "Type in or pick a path", "tcp://..."
+    "Type in or pick a path", "tcp://...", "command [args ...]"
   ];
 
   static const _icons = [
-    Icons.laptop_windows, Icons.language
+    Icons.laptop_windows, Icons.language, Icons.terminal
   ];
 }

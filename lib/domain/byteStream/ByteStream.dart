@@ -7,6 +7,7 @@ import 'dart:async';
 
 import 'QuiescentFileStream.dart';
 import 'SocketStream.dart';
+import 'SubprocStream.dart';
 
 typedef InterruptNotifier = void Function(
   String streamId,
@@ -17,7 +18,8 @@ typedef InterruptNotifier = void Function(
 
 enum AddressFamily {
   file(_resolveFile),
-  net(_resolveHost);
+  net(_resolveHost),
+  cmd(_resolveProc);
 
   const AddressFamily(this.resolve);
 
@@ -26,6 +28,7 @@ enum AddressFamily {
   static ByteStream _resolveFile(
     String addr, InterruptNotifier _
   ) => QuiescentFileStream(addr);
+
   static ByteStream _resolveHost(String addr, InterruptNotifier notifier) {
     try {
       final uri = Uri.parse(addr);
@@ -38,6 +41,11 @@ enum AddressFamily {
       throw InvalidAddressException(e.message);
     }
   }
+
+  static ByteStream _resolveProc(
+    String command,
+    InterruptNotifier notifier
+  ) => SubprocStream(command, notifier);
 }
 
 final class InvalidAddressException implements Exception {
