@@ -164,7 +164,7 @@ final class Analyze extends StatelessWidget {
                       tabsctl.removeTab(selected);
                       return false;
                     } else tabsctl.selectedIndex = 0;
-                  } else tabsctl.selectedIndex = selected - 1;
+                  } else if(selected != 0) tabsctl.selectedIndex = selected - 1;
                 }
               }
               return true;
