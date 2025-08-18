@@ -92,6 +92,13 @@ final menuItemStyle = MenuItemButton.styleFrom(
   overlayColor: const Color(0xFF00DCD6)
 );
 
+final menuIconStyle = MenuItemButton.styleFrom(
+  enabledMouseCursor: SystemMouseCursors.basic,
+  padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 15),
+  textStyle: TextStyle(fontSize: 15),
+  overlayColor: const Color(0xFF00DCD6)
+);
+
 final optionItemStyle = MenuItemButton.styleFrom(
   enabledMouseCursor: SystemMouseCursors.basic,
   padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),

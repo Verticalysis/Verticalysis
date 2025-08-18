@@ -219,7 +219,7 @@ final class AddressEditor extends StatelessWidget {
               padding: const EdgeInsetsDirectional.only(start: 12.0),
               child: Select<AddressFamily>(
                 selected: _mode,
-                alignmentOffset: const Offset(-9, 0),
+                alignmentOffset: const Offset(-16, 0),
                 initialValue: AddressFamily.file,
                 anchorBuilder: (context, selected, icon) => Row(
                   mainAxisSize: MainAxisSize.min,
@@ -234,7 +234,7 @@ final class AddressEditor extends StatelessWidget {
                 optionsBuilder: (context, onTap) => [ for(
                   final mode in AddressFamily.values
                 ) MenuItemButton(
-                  style: menuItemStyle,
+                  style: menuIconStyle,
                   child: Icon(mode.icon, size: 18),
                   onPressed: () => onTap(mode),
                 ) ],
