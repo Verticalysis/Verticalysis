@@ -37,9 +37,9 @@ final class SchemasModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  String enumSchema(int index) {
-    if(index < schList.length) return schList.elementAt(index);
-    return _genericSchema.keys.elementAt(index - schList.length);
+  Iterable<String> get schemas sync* {
+    for(final schema in schList) yield schema;
+    for(final MapEntry(key: schema, value: _) in _genericSchema.entries) yield schema;
   }
 
   static const _genericSchema = {

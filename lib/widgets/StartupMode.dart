@@ -97,7 +97,7 @@ final class StartupMode extends StatelessWidget {
                       )
                     ),
                     optionsBuilder: (context, onTap) => [
-                      for( final schema in schemasModel.schList ) SizedBox(
+                      for(final schema in schemasModel.schemas) SizedBox(
                         width: 270,
                         child: MenuItemButton(
                           style: menuItemStyle,

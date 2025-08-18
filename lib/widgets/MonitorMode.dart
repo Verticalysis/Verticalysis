@@ -283,9 +283,7 @@ final class MonitorMode extends StatelessWidget {
     SubmenuButton(
       style: menuItemStyle,
       child: Text("Interleave", style: itemStyle),
-      menuChildren: [ for(final sch in Iterable.generate(
-        schemasModel.length, schemasModel.enumSchema
-      )) MenuItemButton(
+      menuChildren: [ for(final sch in schemasModel.schemas) MenuItemButton(
         style: menuItemStyle,
         child: Text(sch, style: itemStyle),
         onPressed: () {
