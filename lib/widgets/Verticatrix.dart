@@ -131,11 +131,7 @@ final class VerticatrixController {
     )
   );
 
-  void dispose() {
-    horizontalController.dispose();
-    rowHeaderController.dispose();
-    for(final controller in columnControllers.values) controller.dispose();
-  }
+  void dispose() {}
 }
 
 final class RegionState extends ChangeNotifier {
