@@ -53,15 +53,24 @@ final class MonitorModeController {
     };
     dispatcher.listen(
       Event.projectionAppend,
-      (Filter filter) => projectionsModel.append(filter)
+      (Filter filter) {
+        vcxController.regionState.regionReset();
+        projectionsModel.append(filter);
+      }
     );
     dispatcher.listen(
       Event.projectionRemove,
-      (Iterable<Filter> filter) => projectionsModel.splice(filter)
+      (Iterable<Filter> filter) {
+        vcxController.regionState.regionReset();
+        projectionsModel.splice(filter);
+      }
     );
     dispatcher.listen(
       Event.projectionClear,
-      () => projectionsModel.clear()
+      () {
+        vcxController.regionState.regionReset();
+        projectionsModel.clear();
+      }
     );
   }
 
