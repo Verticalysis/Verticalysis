@@ -4,6 +4,7 @@
 // can be found in the COPYRIGHT file.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../domain/schema/AttrType.dart';
@@ -165,6 +166,14 @@ final class UnifinderController {
     mmc.listen(Event.filterAppend, (_) {
       if(_mode.value != Mode.filter) _mode.value = Mode.filter;
     });
+    _focusNode.onKeyEvent = (FocusNode node, KeyEvent evt) {
+      if(!HardwareKeyboard.instance.isShiftPressed && evt.logicalKey.keyLabel == 'Enter') {
+        if(evt is KeyDownEvent) _mode.value.onSubmit(this);
+        return KeyEventResult.handled;
+      } else {
+        return KeyEventResult.ignored;
+      }
+    };
   }
 
   final TagsEditingController tagsEditingController;
@@ -173,6 +182,8 @@ final class UnifinderController {
   final ValueNotifier<bool> _case;
 
   final Iterator<int> _searching;
+
+  final _focusNode = FocusNode();
 
   Mode get mode => _mode.value;
 
@@ -186,7 +197,10 @@ final class UnifinderController {
 
   void clear() => editor.clear();
 
-  void discard() => tagsEditingController.dispose();
+  void discard() {
+    tagsEditingController.dispose();
+    _focusNode.dispose();
+  }
 }
 
 final class Unifinder extends StatelessWidget {
@@ -214,7 +228,7 @@ final class Unifinder extends StatelessWidget {
           scrollController: _scrollController,
           controller: controller.editor,
           // readOnly: mode == Mode.filter,
-          onSubmitted: (content) => mode.onSubmit(controller),
+          focusNode: controller._focusNode,
           style: mode == Mode.filter ? const TextStyle(height: 2.4) : null,
           cursorHeight: 18,
           decoration: InputDecoration(
