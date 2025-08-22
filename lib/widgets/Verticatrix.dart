@@ -98,6 +98,17 @@ final class VerticatrixController {
     seekScroll = true;
   }
 
+  void scroll2column(String column) {
+    horizontalController.jumpTo(colsWidth((TableState tableState, String column) sync* {
+      for(final (name, _) in tableState.activeColumns) if(name == column) {
+        break;
+      } else yield name;
+    } (tableState, column)));
+    seekScroll = true;
+  }
+
+  bool hasActiveColumn(String name) => tableState.activeColumns.contains(name);
+
   void addColumn(String name, List<String?> columns) {
     visibleColumns.add((name, columns));
     regScrollController(name);
@@ -130,6 +141,10 @@ final class VerticatrixController {
       regionState.rightEdge - regionState.leftEdge + 1
     )
   );
+
+  double colsWidth(Iterable<String> cols) => cols.map(
+    (col) => columnWidths[col]!.value
+  ).reduce((lhs, rhs) => lhs + rhs);
 
   void dispose() {}
 }
@@ -708,13 +723,9 @@ final class Verticatrix extends StatelessWidget {
 
   double cellsWidth(
     int start, int end
-  ) => end != 0 ? colsWidth(
-    tableState.activeColumns.skip(start).take(end - start)
-  ) : 0;
-
-  double colsWidth(Iterable<NamedColumn> cols) => cols.map(
-    match2((col, _) => columnWidths[col]!.value)
-  ).reduce((lhs, rhs) => lhs + rhs);
+  ) => end != 0 ? controller.colsWidth((Iterable<NamedColumn> cols) sync* {
+    for(final(name, _) in cols) yield name;
+  } (tableState.activeColumns.skip(start).take(end - start))) : 0;
 
   static void _copy2clipboard(
     String content
