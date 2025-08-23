@@ -8,6 +8,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart' hide SearchController;
 import 'package:flutter_platform_alert/flutter_platform_alert.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:tabbed_view/tabbed_view.dart';
 
@@ -333,10 +334,28 @@ final class MonitorMode extends StatelessWidget {
         style: itemStyle
       ),
       menuChildren: [
-        for(final (name, formatter) in Formatter.formatters) MenuItemButton(
+        for(final (name, ext, formatter) in Formatter.formatters) MenuItemButton(
           style: menuItemStyle,
           child: Text(name, style: itemStyle),
-          onPressed: () {}
+          onPressed: () async {
+            if(await FilePicker.platform.saveFile(
+              dialogTitle: 'Export to file',
+              fileName: '${container.text}.$ext'.replaceAll(' ', ''),
+            ) case final String path) {
+              final vctl = _controller.vcxController;
+              try {
+                final file = await File(path).create();
+                final text = formatter(0, vctl.entries, vctl.visibleColumns);
+                await file.writeAsString(text);
+              } on FileSystemException catch(e) {
+                FlutterPlatformAlert.showAlert(
+                  windowTitle: 'Export to file failed',
+                  text: e.message,
+                  iconStyle: IconStyle.error,
+                );
+              }
+            }
+          }
         )
       ],
     ),
