@@ -1,0 +1,6 @@
+targets:
+  $default:
+    builders:
+      json_dynamic_widget_codegen:widget_builder:
+        generate_for:
+          - lib/widgets/dynamic/*.dart
