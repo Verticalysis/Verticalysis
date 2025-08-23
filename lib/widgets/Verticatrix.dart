@@ -269,7 +269,7 @@ final class Verticatrix extends StatelessWidget {
 
   final BoxDecoration selectedRegionOutline;
 
-  final Iterable<(String, RegionVisitor<String>)> formatters;
+  final Iterable<(String, String, RegionVisitor<String>)> formatters;
 
   Map<String, ValueNotifier<double>> get columnWidths => controller.columnWidths;
   final _isDragging = ValueNotifier(false);
@@ -571,7 +571,7 @@ final class Verticatrix extends StatelessWidget {
                       height: _ctxMenuItemHeight,
                       enabled: false,
                     ),
-                    for(final (name, formatter) in formatters) PopupMenuItem<Never>(
+                    for(final (name, _, formatter) in formatters) PopupMenuItem<Never>(
                       child: Text(name, style: ctxMenuTextStyle),
                       height: _ctxMenuItemHeight,
                       mouseCursor: MouseCursor.defer,

@@ -15,7 +15,7 @@ Verticatrix buildVerticatrix(
   HeaderBuilder headerBuilder,
   RowHeaderBuilder rowHeaderBuilder,
   ChangeNotifier rowHeaderRebuildNotifier,
-  Iterable<(String, RegionVisitor<String>)> formatters,
+  Iterable<(String, String, RegionVisitor<String>)> formatters,
   { bool showHeaderBackground = true }
 ) => Verticatrix(
   controller: controller,

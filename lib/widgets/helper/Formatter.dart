@@ -14,14 +14,14 @@ abstract class Formatter {
 
   String format(int startRow, int endRow, Iterable<(String, List<String?>)> data);
 
-  static Iterable<(String, FormatFunc)> get formatters => _formatters.map(
-    match2((name, formatter) => (name, formatter.format))
+  static Iterable<(String, String, FormatFunc)> get formatters => _formatters.map(
+    match3((name, ext, formatter) => (name, ext, formatter.format))
   );
 
   static const _formatters = [
-    ("Plaintext", AlignedFormatter(3, "\n", "", false)),
-    ("JSON", KvFormatter()),
-    ("CSV", DelimitedFormatter(",", "\n", true))
+    ("Plaintext", "txt",  const AlignedFormatter(3, "\n", "", false)),
+    (     "JSON", "json", const KvFormatter()),
+    (      "CSV", "csv",  const DelimitedFormatter(",", "\n", true))
   ];
 }
 
