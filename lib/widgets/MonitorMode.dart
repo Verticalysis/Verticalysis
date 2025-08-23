@@ -29,6 +29,7 @@ import 'toolPanes/Plotter.dart';
 import 'MiniMap.dart';
 import 'Style.dart';
 import 'ThemedWidgets.dart';
+import 'Theodolite.dart';
 import 'Unifinder.dart';
 import 'Verticell.dart';
 
@@ -52,6 +53,7 @@ final class MonitorMode extends StatelessWidget {
   bool get toolVisible => _toolView.value != Toolset.none;
 
   final MonitorModeController _controller;
+  final TheodoliteController _theodoliteController;
   final UnifinderController _unifinderController;
 
   final Channel<Notifer3<int, int, Iterable<(
@@ -78,6 +80,7 @@ final class MonitorMode extends StatelessWidget {
   ): _selectRegionUpdateCh = controller.getChannel(Event.selectRegionUpdate),
    _controller = controller,
    _unifinderController = UnifinderController(controller),
+   _theodoliteController = TheodoliteController(controller.dispatcher),
    container = container {
     container.value = dispose;
     _toolset.add(Analyze(_controller));
@@ -120,7 +123,7 @@ final class MonitorMode extends StatelessWidget {
     color: ColorScheme.of(context).surfaceContainer,
     child: Column(children: [
       Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
         decoration: BoxDecoration(
           color: ColorScheme.of(context).surface,
             boxShadow: [BoxShadow(
@@ -131,8 +134,8 @@ final class MonitorMode extends StatelessWidget {
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
-          spacing: 9,
           children: [
+            const SizedBox(width: 3),
             NestedMenu(
               buildActions(TextTheme.of(context).titleMedium)
             ).withIcon(
@@ -143,12 +146,15 @@ final class MonitorMode extends StatelessWidget {
               cursor: SystemMouseCursors.basic,
               iconSize: 27,
             ),
+            const SizedBox(width: 6),
             Expanded(child: SizedBox(
               height: 40,
               child: ClipRect( // https://github.com/flutter/flutter/issues/153240
                 child: Unifinder(_unifinderController)
               )
-            ))
+            )),
+            const SizedBox(width: 3),
+            Theodolite(_theodoliteController, 180)
           ]
         ),
       ),
@@ -347,6 +353,7 @@ final class MonitorMode extends StatelessWidget {
   void dispose() {
     _controller.dispose();
     WidgetsBinding.instance.removeObserver(WindowSizeObserver(() {}, this));
+    _theodoliteController.dispose();
     _unifinderController.discard();
   }
 

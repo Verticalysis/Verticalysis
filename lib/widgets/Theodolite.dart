@@ -93,7 +93,7 @@ final class Theodolite extends StatelessWidget {
               readOnly: columnsAccess,
               controller: _controller.entriesSpecifier,
               decoration: _buildDecoration(
-                hintText: "entries ...",
+                hintText: "row^lines",
                 colorScheme: ColorScheme.of(context),
                 activated: !columnsAccess,
                 hovered: iconHovered,

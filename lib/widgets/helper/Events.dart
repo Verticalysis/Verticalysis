@@ -24,6 +24,7 @@ enum Event<T extends Function> implements Topic<T> {
   collectionAppend(notifier1<int>),
   collectionRemove(notifier1<int>),
   expandToolView(notifier1<Toolset>),
+  requestTeleport(notifier2<String?, int?>),
   sourceLinkDown(notifier3<String, Exception, Completer<bool>>);
 
   const Event(this._notifer);

@@ -72,6 +72,13 @@ final class MonitorModeController {
         projectionsModel.clear();
       }
     );
+    dispatcher.listen(
+      Event.requestTeleport,
+      (String? column, int? entry) {
+        if(column != null) vcxController.scroll2column(column);
+        if(entry != null) vcxController.scroll2index(entry.toDouble());
+      }
+    );
   }
 
   Projection get currentProjection => projectionsModel.current;
