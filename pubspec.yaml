@@ -70,6 +70,8 @@ dev_dependencies:
 
   flutter_lints: ^5.0.0
 
+  json_dynamic_widget_codegen: ^3.0.0
+
 flutter:
 
   # The following line ensures that the Material Icons font is
