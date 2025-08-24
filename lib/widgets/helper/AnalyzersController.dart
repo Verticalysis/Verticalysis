@@ -10,7 +10,6 @@ import '../../domain/analysis/builtin/NumericAnalyzer.dart';
 import '../../domain/analysis/builtin/RegressionAnalyzer.dart';
 import '../../domain/analysis/builtin/StatisticAnalyzer.dart';
 
-
 extension type AnalyzerInitializerRegistry._(
   JsonWidgetRegistry reg
 ) implements JsonWidgetRegistry {
@@ -57,7 +56,9 @@ final class AnalyzersCotroller {
     return index;
   }
 
-  Widget buildPanel(BuildContext ctx) => _panelBlueprint.build(context: ctx);
+  Widget buildPanel(BuildContext ctx) => _panelBlueprint.build(
+    context: ctx, registry: AnalyzerInitializerRegistry(options)
+  );
 
   Widget vectorAnalysis(
     int index,
@@ -66,7 +67,7 @@ final class AnalyzersCotroller {
   ) => JsonWidgetData.fromDynamic(
     (enumerate(index) as VectorAnalyzer).analyze(vector, options),
     registry: JsonWidgetRegistry()
-  ).build(context: ctx);
+  ).build(context: ctx, registry: AnalyzerInitializerRegistry(options));
 
 
   List<Widget> scalarAnalysis(
@@ -82,7 +83,7 @@ final class AnalyzersCotroller {
     )) res.add(JsonWidgetData.fromDynamic(
       analyzer.analyze(vector.asScalar(iters), options),
       registry: JsonWidgetRegistry()
-    ).build(context: ctx));
+    ).build(context: ctx, registry: AnalyzerInitializerRegistry(options)));
     return res;
   }
 
