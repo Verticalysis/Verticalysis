@@ -4,16 +4,11 @@
 // can be found in the COPYRIGHT file.
 
 abstract class Filter<T extends Comparable> {
-  Filter(this.attribute);
-
-  final String attribute;
-
   List<int> filter(
     Iterable<int> index,
     List<V?> getTypedView<V extends Comparable>(String name)
   );
 
-  bool Function(T? val) get predicate;
   String get label;
 }
 
@@ -33,7 +28,7 @@ mixin SingleAttributeFilter<T extends Comparable> implements Filter<T> {
 
 final class EqualityFilter<T extends Comparable>
   extends Filter<T> with SingleAttributeFilter<T> {
-  EqualityFilter(super.attribute, T lhs): predicate = (
+  EqualityFilter(this.attribute, T lhs): predicate = (
     (rhs) => lhs == rhs
   ), label = "$attribute: $lhs";
 
@@ -41,7 +36,8 @@ final class EqualityFilter<T extends Comparable>
     String attribute, Comparable lhs
   )=> EqualityFilter<T>(attribute, lhs as T);
 
-  @override
+  final String attribute;
+
   final bool Function(T? val) predicate;
 
   @override
@@ -50,7 +46,7 @@ final class EqualityFilter<T extends Comparable>
 
 final class MemberOfFilter<T extends Comparable>
   extends Filter<T> with SingleAttributeFilter<T> {
-  MemberOfFilter(super.attribute, List<T> set): predicate = (
+  MemberOfFilter(this.attribute, List<T> set): predicate = (
     (val) => set.contains(val)
   ), label = "$attribute ∈ { ${set.join(", ")} }";
 
@@ -58,7 +54,8 @@ final class MemberOfFilter<T extends Comparable>
     String attribute, List<Comparable?> set
   )=> MemberOfFilter<T>(attribute, set.cast<T>());
 
-  @override
+  final String attribute;
+
   final bool Function(T? val) predicate;
 
   @override
@@ -67,7 +64,7 @@ final class MemberOfFilter<T extends Comparable>
 
 final class IntervalFilter<T extends Comparable>
   extends Filter<T> with SingleAttributeFilter<T> {
-  IntervalFilter(super.attribute, T min, T max, [
+  IntervalFilter(this.attribute, T min, T max, [
     bool linclusive = true, bool rinclusive = false
   ]): predicate = switch((linclusive, rinclusive)) {
     (true, true)   => (val) => val != null && val >= min && val <= max,
@@ -97,7 +94,8 @@ final class IntervalFilter<T extends Comparable>
     String attribute, Comparable min, Comparable max
   ): this(attribute, min as T, max as T, false, true);
 
-  @override
+  final String attribute;
+
   final bool Function(T? val) predicate;
 
   @override
@@ -106,7 +104,7 @@ final class IntervalFilter<T extends Comparable>
 
 final class LessThanFilter<T extends Comparable>
   extends Filter<T> with SingleAttributeFilter<T> {
-  LessThanFilter(super.attribute, T max, bool inclusive): predicate = (
+  LessThanFilter(this.attribute, T max, bool inclusive): predicate = (
     inclusive ? (val) => val != null && val <= max
       : (val) => val != null && val < max
   ), label = inclusive ? "$attribute ≤ $max" : "$attribute < $max";
@@ -119,7 +117,8 @@ final class LessThanFilter<T extends Comparable>
     String attribute, Comparable max
   ): this(attribute, max as T, false);
 
-  @override
+  final String attribute;
+
   final bool Function(T? val) predicate;
 
   @override
@@ -128,7 +127,7 @@ final class LessThanFilter<T extends Comparable>
 
 final class GreaterThanFilter<T extends Comparable>
   extends Filter<T> with SingleAttributeFilter<T> {
-  GreaterThanFilter(super.attribute, T min, bool inclusive): predicate = (
+  GreaterThanFilter(this.attribute, T min, bool inclusive): predicate = (
     inclusive ? (val) => val != null && val >= min
       : (val) => val != null && val > min
   ), label = inclusive ? "$attribute ≥ $min" : "$attribute > $min";
@@ -141,7 +140,8 @@ final class GreaterThanFilter<T extends Comparable>
     String attribute, Comparable min
   ): this(attribute, min as T, false);
 
-  @override
+  final String attribute;
+
   final bool Function(T? val) predicate;
 
   @override
