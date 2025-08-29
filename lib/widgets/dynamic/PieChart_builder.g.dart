@@ -56,8 +56,8 @@ class PieChartBuilder extends _PieChartBuilder {
 
     return _PieChart(
       animate: model.animate,
-      colorPalette: model.colorPalette,
       data: model.data,
+      principleColor: model.principleColor,
     );
   }
 }
@@ -67,14 +67,14 @@ class JsonPieChart extends JsonWidgetData {
     Map<String, dynamic> args = const {},
     JsonWidgetRegistry? registry,
     this.animate = false,
-    this.colorPalette = const [0xFF00DCD6, 0xFF009A9A, 0xFF0037DC, 0xFF009A00],
     this.data = const {},
+    this.principleColor = 0xFF00DCD6,
   }) : super(
          jsonWidgetArgs: PieChartBuilderModel.fromDynamic(
            {
              'animate': animate,
-             'colorPalette': colorPalette,
              'data': data,
+             'principleColor': principleColor,
 
              ...args,
            },
@@ -85,8 +85,8 @@ class JsonPieChart extends JsonWidgetData {
            args: PieChartBuilderModel.fromDynamic(
              {
                'animate': animate,
-               'colorPalette': colorPalette,
                'data': data,
+               'principleColor': principleColor,
 
                ...args,
              },
@@ -99,24 +99,24 @@ class JsonPieChart extends JsonWidgetData {
 
   final bool animate;
 
-  final List<dynamic> colorPalette;
-
   final Map<dynamic, dynamic> data;
+
+  final int principleColor;
 }
 
 class PieChartBuilderModel extends JsonWidgetBuilderModel {
   const PieChartBuilderModel(
     super.args, {
     this.animate = false,
-    this.colorPalette = const [0xFF00DCD6, 0xFF009A9A, 0xFF0037DC, 0xFF009A00],
     this.data = const {},
+    this.principleColor = 0xFF00DCD6,
   });
 
   final bool animate;
 
-  final List<dynamic> colorPalette;
-
   final Map<dynamic, dynamic> data;
+
+  final int principleColor;
 
   static PieChartBuilderModel fromDynamic(
     dynamic map, {
@@ -154,10 +154,14 @@ class PieChartBuilderModel extends JsonWidgetBuilderModel {
         result = PieChartBuilderModel(
           args,
           animate: JsonClass.parseBool(map['animate'], whenNull: false),
-          colorPalette:
-              map['colorPalette'] ??
-              const [0xFF00DCD6, 0xFF009A9A, 0xFF0037DC, 0xFF009A00],
           data: map['data'] ?? const {},
+          principleColor: () {
+            dynamic parsed = JsonClass.maybeParseInt(map['principleColor']);
+
+            parsed ??= 0xFF00DCD6;
+
+            return parsed;
+          }(),
         );
       }
     }
@@ -169,11 +173,8 @@ class PieChartBuilderModel extends JsonWidgetBuilderModel {
   Map<String, dynamic> toJson() {
     return JsonClass.removeNull({
       'animate': false == animate ? null : animate,
-      'colorPalette':
-          const [0xFF00DCD6, 0xFF009A9A, 0xFF0037DC, 0xFF009A00] == colorPalette
-          ? null
-          : colorPalette,
       'data': const {} == data ? null : data,
+      'principleColor': 0xFF00DCD6 == principleColor ? null : principleColor,
 
       ...args,
     });
@@ -192,8 +193,8 @@ class PieChartSchema {
     'additionalProperties': false,
     'properties': {
       'animate': SchemaHelper.boolSchema,
-      'colorPalette': SchemaHelper.anySchema,
       'data': SchemaHelper.anySchema,
+      'principleColor': SchemaHelper.numberSchema,
     },
     'required': [],
   };

@@ -6,6 +6,8 @@
 import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:json_dynamic_widget/json_dynamic_widget.dart';
 
+import 'utils.dart';
+
 part 'PieChart_builder.g.dart';
 
 @jsonWidget
@@ -27,16 +29,11 @@ class _PieChart extends StatelessWidget {
   const _PieChart({
     Map data = const {},
     bool animate = false,
-    List colorPalette = const [
-      0xFF00DCD6,
-      0xFF009A9A,
-      0xFF0037DC,
-      0xFF009A00,
-    ],
-  }): _data = data, _animate = animate, _colorPalette = colorPalette;
+    int principleColor = 0xFF00DCD6,
+  }): _data = data, _animate = animate, _principleColor = principleColor;
 
   final Map _data;
-  final List _colorPalette;
+  final int _principleColor;
   final bool _animate;
 
   @override
@@ -44,8 +41,8 @@ class _PieChart extends StatelessWidget {
     [ charts.Series<MapEntry, String>(
         id: 'primary',
         colorFn: (_, index) {
-          final palette = _colorPalette.cast<int>();
-          final color = palette[index! % palette.length];
+          final palette = AsymptoticPalette(_principleColor);
+          final color = palette[index!.toDouble()];
           return charts.Color(
             a: (color >> 24) & 0xFF,
             r: (color >> 16) & 0xFF,
