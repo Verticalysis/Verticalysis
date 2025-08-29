@@ -117,14 +117,14 @@ final class DescIndex extends Index {
 }
 
 final class SkippedIndex extends Index {
-  SkippedIndex(this._underlying, this.offset);
+  SkippedIndex(this._underlying, this._offset);
 
   @override
-  int operator [](int offset) => _underlying[offset + offset];
+  int operator [](int offset) => _underlying[offset + _offset];
 
   @override
   List<int> where(bool pred(int val)) => [ for(
-    int i = offset; i != _underlying.length; ++i
+    int i = _offset; i != _underlying.length; ++i
   ) if(pred(_underlying[i])) _underlying[i] ];
 
   @override
@@ -137,5 +137,5 @@ final class SkippedIndex extends Index {
   int get length => _underlying.length;
 
   final Index _underlying;
-  final int offset;
+  final int _offset;
 }
