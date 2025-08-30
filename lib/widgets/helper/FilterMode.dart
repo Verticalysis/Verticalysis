@@ -4,6 +4,7 @@
 // can be found in the COPYRIGHT file.
 
 import '../../domain/schema/Attribute.dart';
+import '../../domain/utils/ScalarTime.dart';
 import '../../models/FiltersModel.dart';
 
 typedef ScalarParser = Comparable? Function(String);
@@ -111,11 +112,23 @@ enum FilterMode {
     double.tryParse,
     int.tryParse,
     _identityString,
-    int.tryParse,
-    int.tryParse,
+    _parseAbsoluteTime,
+    _parseRelativeTime
   ];
 
   static String _identityString(String s) => s;
+
+  static int? _parseRelativeTime(String s) {
+    final result = RelativeTime.parse(s.codeUnits.iterator);
+    if(result.isIncomplete || result.isInvalid) return null;
+    return result.us;
+  }
+
+  static int? _parseAbsoluteTime(String s) {
+    final res = AbsoluteTime.parse(s.codeUnits.iterator, DateTime.now().year);
+    if(res.isIncomplete || res.isInvalid) return null;
+    return res.usSinceEpoch;
+  }
 
   static List<String> _parseCommaSeparatedLiterals(
     String literal
