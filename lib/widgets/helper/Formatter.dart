@@ -36,9 +36,47 @@ final class AlignedFormatter extends Formatter {
   final bool withHeader;
 
   @override
+  /// Format [data] with each column aligned to the left and separated by [delimiter]
   String format(int startRow, int endRow, Iterable<(String, List<String?>)> data) {
-    // TODO: implement format
-    throw UnimplementedError();
+    final res = StringBuffer();
+    List<String?> last = const [];
+
+    // Calculate maximum width for each column
+    final columnWidths = <int>[];
+    for(final (_, values) in data) {
+      int maxWidth = values.isNotEmpty ? values[startRow]?.length ?? 0 : 0;
+
+      for(int row = startRow; row < endRow; row++) {
+        final value = values[row] ?? '';
+        maxWidth = maxWidth > value.length ? maxWidth : value.length;
+      }
+
+      columnWidths.add(maxWidth + margin);
+      last = values;
+    }
+
+    // Write header if enabled
+    if(withHeader) {
+      for(final (col, (title, values)) in data.indexed) {
+        res.write(title.padRight(columnWidths[col]));
+        if(values != last) res.write(delimiter);
+      }
+      res.write(lineBreak);
+    }
+
+    // Write data rows
+    for(int row = startRow; row < endRow; row++) {
+      bool hasData = false;
+      for(final (col, (_, values)) in data.indexed) {
+        hasData = true;
+        final value = values[row] ?? '';
+        res.write(value.padRight(columnWidths[col]));
+        if(values != last) res.write(delimiter);
+      }
+      if(hasData) res.write(lineBreak);
+    }
+
+    return res.toString();
   }
 }
 
