@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../../domain/amorphous/EventManifold.dart';
 import '../../domain/amorphous/Projection.dart';
 import '../../domain/byteStream/ByteStream.dart';
+import '../../domain/schema/AttrType.dart';
 import '../../domain/schema/Schema.dart';
 import '../../models/FiltersModel.dart';
 import '../../models/PipelineModel.dart';
@@ -83,6 +84,10 @@ final class MonitorModeController {
 
   Projection get currentProjection => projectionsModel.current;
 
+  List<Comparable?> getTypedColumn(String name) => projectionsModel.getColumn(
+    name, pipelineModel.getAttrTypeByName
+  ).typedView;
+
   void listen<T extends Function>(
     Topic<T> topic, T listener
   ) => dispatcher.listen<T>(topic, listener);
@@ -123,5 +128,10 @@ final class MonitorModeController {
   void dispose() {
     pipelineModel.discard();
     vcxController.dispose();
+  }
+
+  AttrType? getAttrTypeByName(String name) {
+    if(!vcxController.visibleColumns.contains(name)) return null;
+    return pipelineModel.getAttrTypeByName(name);
   }
 }

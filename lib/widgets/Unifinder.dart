@@ -5,6 +5,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_platform_alert/flutter_platform_alert.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../domain/schema/AttrType.dart';
@@ -12,6 +13,7 @@ import '../models/FiltersModel.dart';
 import '../models/ProjectionsModel.dart';
 import 'helper/Events.dart';
 import 'helper/MonitorModeController.dart';
+import 'helper/PhlexFilter.dart';
 import 'shared/Clickable.dart';
 import 'shared/Hoverable.dart';
 import 'shared/Select.dart';
@@ -34,8 +36,29 @@ enum Mode {
   }
 
   static void _filter(UnifinderController controller) {
+    final tagsCtl = controller.tagsEditingController;
+    final submitFilter = (Filter filter) {
+      controller.editor.text = "";
+      tagsCtl._appendFilter(filter);
+    };
 
+    PhlexFilter.createNoThrow(
+      tagsCtl.text,
+      controller._attrAccessor,
+      controller._columnAccessor,
+      submitFilter,
+      alertPhlexExprError
+    );
   }
+
+  static void alertPhlexExprError(
+    String msg, StackTrace trace
+  ) => FlutterPlatformAlert.showAlert(
+    windowTitle: "Failed to filter with PHLEX expression",
+    text: msg,
+    alertStyle: AlertButtonStyle.ok,
+    iconStyle: IconStyle.error,
+  );
 }
 
 final class ModeSwitcher extends StatelessWidget {
@@ -160,7 +183,9 @@ final class UnifinderController {
     this.textEditingController,
     SearchController searchController,
     MonitorModeController mmc,
-  ): _searching = searchController.search(
+  ): _attrAccessor = mmc.getAttrTypeByName,
+    _columnAccessor = mmc.getTypedColumn,
+    _searching = searchController.search(
     textEditingController, _case
   ).iterator {
     mmc.listen(Event.filterAppend, (_) {
@@ -182,6 +207,9 @@ final class UnifinderController {
   final ValueNotifier<bool> _case;
 
   final Iterator<int> _searching;
+
+  final AttrAccessor _attrAccessor;
+  final ColumnAccessor _columnAccessor;
 
   final _focusNode = FocusNode();
 
@@ -308,10 +336,7 @@ final class TagsEditingController
     super.fromValue(
     text == null ? TextEditingValue.empty : TextEditingValue(text: text)
   ) {
-    mmc.listen(Event.filterAppend, (Filter filter) {
-      appendFilter(filter);
-      _projectionAppendCh.notify(filter);
-    });
+    mmc.listen(Event.filterAppend, _appendFilter);
   }
 
   final Channel<Notifer1<Filter>> _projectionAppendCh;
@@ -319,6 +344,7 @@ final class TagsEditingController
   final Channel<VoidCallback> _projectionClearCh;
 
   void clear() {
+    super.clear();
     clearFilters();
     _projectionClearCh.notify();
   }
@@ -383,6 +409,11 @@ final class TagsEditingController
       ))
     )
   );
+
+  void _appendFilter(Filter filter) {
+    appendFilter(filter);
+    _projectionAppendCh.notify(filter);
+  }
 
   static const _tagShape = RoundedRectangleBorder(
     side: BorderSide(style: BorderStyle.none),
