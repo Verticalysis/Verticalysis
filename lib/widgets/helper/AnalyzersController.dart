@@ -9,15 +9,26 @@ import '../../domain/analysis/Analyzer.dart';
 import '../../domain/analysis/builtin/NumericAnalyzer.dart';
 import '../../domain/analysis/builtin/RegressionAnalyzer.dart';
 import '../../domain/analysis/builtin/StatisticAnalyzer.dart';
+import '../dynamic/BarChart_builder.dart';
+import '../dynamic/DataTable_builder.dart';
+import '../dynamic/PieChart_builder.dart';
 
 extension type AnalyzerInitializerRegistry._(
   JsonWidgetRegistry reg
 ) implements JsonWidgetRegistry {
   AnalyzerInitializerRegistry(
     Map<String, dynamic> options
-  ): reg = JsonWidgetRegistry(
-    values: options, functions: _routines
-  );
+  ): reg = JsonWidgetRegistry(values: options, functions: _routines, builders: {
+    BarChartBuilder.kType: JsonWidgetBuilderContainer(
+      builder: BarChartBuilder.fromDynamic,
+    ),
+    DataTableBuilder.kType: JsonWidgetBuilderContainer(
+      builder: DataTableBuilder.fromDynamic,
+    ),
+    PieChartBuilder.kType: JsonWidgetBuilderContainer(
+      builder: PieChartBuilder.fromDynamic,
+    ),
+  });
 
   static dynamic setBool ({
     required args, required registry
@@ -64,10 +75,13 @@ final class AnalyzersCotroller {
     int index,
     Iterable<GenericCandidate> vector,
     BuildContext ctx
-  ) => JsonWidgetData.fromDynamic(
-    (enumerate(index) as VectorAnalyzer).analyze(vector, options),
-    registry: JsonWidgetRegistry()
-  ).build(context: ctx, registry: AnalyzerInitializerRegistry(options));
+  ) {
+    final registry = AnalyzerInitializerRegistry(options);
+    return JsonWidgetData.fromDynamic(
+      (enumerate(index) as VectorAnalyzer).analyze(vector, options),
+      registry: registry
+    ).build(context: ctx, registry: registry);
+  }
 
 
   List<Widget> scalarAnalysis(
@@ -77,13 +91,14 @@ final class AnalyzersCotroller {
   ) {
     final res = <Widget>[];
     final analyzer = enumerate(index) as ScalarAnalyzer;
+    final registry = AnalyzerInitializerRegistry(options);
     final iters = vector.map((c) => c.data.iterator).toList();
     while(iters.every(
       (iter) => iter.moveNext()
     )) res.add(JsonWidgetData.fromDynamic(
       analyzer.analyze(vector.asScalar(iters), options),
-      registry: JsonWidgetRegistry()
-    ).build(context: ctx, registry: AnalyzerInitializerRegistry(options)));
+      registry: registry
+    ).build(context: ctx, registry: registry));
     return res;
   }
 
