@@ -57,6 +57,7 @@ class PieChartBuilder extends _PieChartBuilder {
     return _PieChart(
       animate: model.animate,
       data: model.data,
+      legendConfig: model.legendConfig,
       principleColor: model.principleColor,
     );
   }
@@ -68,12 +69,14 @@ class JsonPieChart extends JsonWidgetData {
     JsonWidgetRegistry? registry,
     this.animate = false,
     this.data = const {},
+    this.legendConfig,
     this.principleColor = 0xFF00DCD6,
   }) : super(
          jsonWidgetArgs: PieChartBuilderModel.fromDynamic(
            {
              'animate': animate,
              'data': data,
+             'legendConfig': legendConfig,
              'principleColor': principleColor,
 
              ...args,
@@ -86,6 +89,7 @@ class JsonPieChart extends JsonWidgetData {
              {
                'animate': animate,
                'data': data,
+               'legendConfig': legendConfig,
                'principleColor': principleColor,
 
                ...args,
@@ -101,6 +105,8 @@ class JsonPieChart extends JsonWidgetData {
 
   final Map<dynamic, dynamic> data;
 
+  final Map<dynamic, dynamic>? legendConfig;
+
   final int principleColor;
 }
 
@@ -109,12 +115,15 @@ class PieChartBuilderModel extends JsonWidgetBuilderModel {
     super.args, {
     this.animate = false,
     this.data = const {},
+    this.legendConfig,
     this.principleColor = 0xFF00DCD6,
   });
 
   final bool animate;
 
   final Map<dynamic, dynamic> data;
+
+  final Map<dynamic, dynamic>? legendConfig;
 
   final int principleColor;
 
@@ -155,6 +164,7 @@ class PieChartBuilderModel extends JsonWidgetBuilderModel {
           args,
           animate: JsonClass.parseBool(map['animate'], whenNull: false),
           data: map['data'] ?? const {},
+          legendConfig: map['legendConfig'],
           principleColor: () {
             dynamic parsed = JsonClass.maybeParseInt(map['principleColor']);
 
@@ -174,6 +184,7 @@ class PieChartBuilderModel extends JsonWidgetBuilderModel {
     return JsonClass.removeNull({
       'animate': false == animate ? null : animate,
       'data': const {} == data ? null : data,
+      'legendConfig': legendConfig,
       'principleColor': 0xFF00DCD6 == principleColor ? null : principleColor,
 
       ...args,
@@ -194,6 +205,7 @@ class PieChartSchema {
     'properties': {
       'animate': SchemaHelper.boolSchema,
       'data': SchemaHelper.anySchema,
+      'legendConfig': SchemaHelper.anySchema,
       'principleColor': SchemaHelper.numberSchema,
     },
     'required': [],

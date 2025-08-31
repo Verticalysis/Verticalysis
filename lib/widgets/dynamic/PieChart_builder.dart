@@ -30,11 +30,16 @@ class _PieChart extends StatelessWidget {
     Map data = const {},
     bool animate = false,
     int principleColor = 0xFF00DCD6,
-  }): _data = data, _animate = animate, _principleColor = principleColor;
+    Map? legendConfig
+  }) : _data = data,
+      _animate = animate,
+      _principleColor = principleColor,
+      _legendConfig = legendConfig;
 
   final Map _data;
   final int _principleColor;
   final bool _animate;
+  final Map? _legendConfig;
 
   @override
   Widget build(BuildContext context) => charts.PieChart(
@@ -55,5 +60,48 @@ class _PieChart extends StatelessWidget {
         data: _data.entries.toList(),
     ) ],
     animate: _animate,
+    behaviors: _legendConfig != null ? ([
+      charts.DatumLegend<Object>(
+        // Positions for "start" and "end" will be left and right respectively
+        // for widgets with a build context that has directionality ltr.
+        // For rtl, "start" and "end" will be right and left respectively.
+        // Since this example has directionality of ltr, the legend is
+        // positioned on the right side of the chart.
+        position: _legendPositions[_legendConfig["position"]],
+        // For a legend that is positioned on the left or right of the chart,
+        // setting the justification for [endDrawArea] is aligned to the
+        // bottom of the chart draw area.
+        outsideJustification: _legendJustification[_legendConfig["justification"]],
+        // By default, if the position of the chart is on the left or right of
+        // the chart, [horizontalFirst] is set to false. This means that the
+        // legend entries will grow as new rows first instead of a new column.
+        horizontalFirst: _legendConfig["horizontalFirst"],
+        // By setting this value to 2, the legend entries will grow up to two
+        // rows before adding a new column.
+        desiredMaxRows: _legendConfig["maxRows"],
+        // This defines the padding around each legend entry.
+        cellPadding: EdgeInsets.only(
+          left: _legendConfig["cellPaddingLeft"] ?? 0,
+          top: _legendConfig["cellPaddingTop"] ?? 0,
+          right: _legendConfig["cellPaddingRight"] ?? 0,
+          bottom: _legendConfig["cellPaddingBottom"] ?? 0
+        ),
+        // Render the legend entry text with custom styles.
+        entryTextStyle: charts.TextStyleSpec(
+          fontFamily: _legendConfig["fontFamily"],
+          fontSize: _legendConfig["fontSize"]
+        ),
+      )
+    ]) : null
   );
+
+  static const _legendPositions = {
+    "start": charts.BehaviorPosition.start,
+    "end": charts.BehaviorPosition.end,
+  };
+
+  static const _legendJustification = {
+    "start": charts.OutsideJustification.startDrawArea,
+    "end": charts.OutsideJustification.endDrawArea,
+  };
 }
