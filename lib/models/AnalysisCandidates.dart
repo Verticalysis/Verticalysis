@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 
 import '../domain/analysis/Analyzer.dart';
 import '../domain/schema/AttrType.dart';
+import '../domain/utils/ListView.dart';
 import 'ProjectionsModel.dart';
 
 
@@ -30,7 +31,7 @@ final class AnalysisCandidates extends ChangeNotifier {
     (candidate) => AnalysisCandidate(
       candidate.name,
       candidate.type,
-      candidate.data.typedView.take(end).skip(start)
+      ListView.fromRange(candidate.data.typedView, start, end)
     )
   );
 

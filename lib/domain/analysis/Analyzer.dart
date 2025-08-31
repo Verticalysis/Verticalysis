@@ -15,7 +15,7 @@ final class AnalysisCandidate<T extends Iterable<Comparable?>> {
   T data;
 }
 
-typedef GenericCandidate = AnalysisCandidate<Iterable<Comparable?>>;
+typedef GenericCandidate = AnalysisCandidate<List<Comparable?>>;
 
 abstract class Analyzer {
   const Analyzer();
