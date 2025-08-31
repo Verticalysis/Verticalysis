@@ -20,7 +20,7 @@ abstract class Formatter {
 
   static const _formatters = [
     ("Plaintext", "txt",  const AlignedFormatter(3, "\n", "", false)),
-    (     "JSON", "json", const KvFormatter()),
+    (     "JSON", "json", const KvFormatter.json()),
     (      "CSV", "csv",  const DelimitedFormatter(",", "\n", true))
   ];
 }
@@ -109,11 +109,95 @@ final class DelimitedFormatter extends Formatter {
 }
 
 final class KvFormatter extends Formatter {
-  const KvFormatter();
+  const KvFormatter(
+    this.keyPrefix,
+    this.keySuffix,
+    this.valuePrefix,
+    this.valueSuffix,
+    this.association,
+    this.entryPrefix,
+    this.entrySuffix,
+    this.fieldDelimiter,
+    this.entryDelimiter,
+  );
+
+  const KvFormatter.json()
+    : keyPrefix = '"',
+      keySuffix = '"',
+      valuePrefix = '"',
+      valueSuffix = '"',
+      association = ': ',
+      entryPrefix = '{\n  ',
+      entrySuffix = '\n}',
+      fieldDelimiter = ',\n  ',
+      entryDelimiter = ',\n';
+
+  final String keyPrefix;
+  final String keySuffix;
+
+  final String valuePrefix;
+  final String valueSuffix;
+
+  final String association;
+
+  final String entryPrefix;
+  final String entrySuffix;
+
+  final String fieldDelimiter;
+  final String entryDelimiter;
 
   @override
+  /// format [data] as follows:
+  /// [entryPrefix]
+  ///   [keyPrefix] header [keySuffix] [association] [valuePrefix] value [valueSuffix] [fieldDelimiter]
+  ///  ... more fields
+  /// [entrySuffix] [entryDelimiter]
+  /// ... more entries
+  ///
+  /// for JSON:
+  /// {
+  ///   "header": "value",
+  ///   ... more fields
+  /// },
+  /// ... more entries
   String format(int startRow, int endRow, Iterable<(String, List<String?>)> data) {
-    // TODO: implement format
-    throw UnimplementedError();
+    final res = StringBuffer();
+
+    // Write each row as a JSON object
+    for(int row = startRow; row < endRow; row++) {
+      res.write(entryPrefix);
+
+      bool firstField = true;
+      for(final (columnName, columnValues) in data) {
+        if (!firstField) {
+          res.write(fieldDelimiter);
+        }
+        firstField = false;
+
+        res.write(keyPrefix);
+        res.write(_escapeJsonString(columnName));
+        res.write(keySuffix);
+
+        res.write(association);
+
+        res.write(valuePrefix);
+        final value = row < columnValues.length ? columnValues[row] : null;
+        res.write(_escapeJsonString(value ?? ''));
+        res.write(valueSuffix);
+      }
+
+      res.write(entrySuffix);
+
+      if(row < endRow - 1) res.write(entryDelimiter);
+    }
+
+    return res.toString();
   }
+
+  static String _escapeJsonString(String input) => input
+    .replaceAll('\\', '\\\\')
+    .replaceAll('"', '\\"')
+    .replaceAll('\n', '\\n')
+    .replaceAll('\r', '\\r')
+    .replaceAll('\t', '\\t');
 }
