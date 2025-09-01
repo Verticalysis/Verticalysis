@@ -4,6 +4,7 @@
 // can be found in the COPYRIGHT file.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_platform_alert/flutter_platform_alert.dart';
 import 'package:json_dynamic_widget/json_dynamic_widget.dart';
 import 'package:tabbed_view/tabbed_view.dart';
 import 'package:sliver_sticky_collapsable_panel/sliver_sticky_collapsable_panel.dart';
@@ -355,23 +356,31 @@ final class AnalysisSession extends StatelessWidget {
                   onClick: () {
                     final analyzer = _controller.enumerate(selected);
                     _container.text = analyzer.name;
-                    if(analyzer.isVectorAnalyzer) {
-                      _container.content = _controller.vectorAnalysis(
-                        selected, _analysisCandidates.candidates, context
-                      );
-                    } else {
-                      final entries = _controller.scalarAnalysis(
-                        selected, _analysisCandidates.candidates, context
-                      );
-                      _container.content = ListView.separated(
-                        padding: EdgeInsets.all(0.0),
-                        itemCount: _analysisCandidates.length,
-                        itemBuilder: (context, i) => entries[i],
-                        separatorBuilder: (context, _) => Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 13),
-                          color: ColorScheme.of(context).onSurface,
-                          height: 0.6,
-                        ),
+                    try{
+                      if(analyzer.isVectorAnalyzer) {
+                        _container.content = _controller.vectorAnalysis(
+                          selected, _analysisCandidates.candidates, context
+                        );
+                      } else {
+                        final entries = _controller.scalarAnalysis(
+                          selected, _analysisCandidates.candidates, context
+                        );
+                        _container.content = ListView.separated(
+                          padding: EdgeInsets.all(0.0),
+                          itemCount: _analysisCandidates.length,
+                          itemBuilder: (context, i) => entries[i],
+                          separatorBuilder: (context, _) => Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 13),
+                            color: ColorScheme.of(context).onSurface,
+                            height: 0.6,
+                          ),
+                        );
+                      }
+                    } catch(e, st) {
+                      FlutterPlatformAlert.showAlert(
+                        windowTitle: 'Analyzer reported an error: ${e.toString()}',
+                        text: st.toString(),
+                        iconStyle: IconStyle.error,
                       );
                     }
                   }
