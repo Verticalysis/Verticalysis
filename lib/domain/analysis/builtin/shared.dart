@@ -5,6 +5,43 @@
 
 typedef Blueprint = Map<String, dynamic>;
 
+extension type Padded._(Blueprint blueprint) implements Blueprint {
+  Padded(Map<String, int> paddings, Blueprint child): blueprint = {
+    "type": "padding",
+    "args": {
+      "padding": paddings,
+      "child": child
+    }
+  };
+
+  Padded.symmetric(int horizontal, int vertical, Blueprint child): blueprint = {
+    "type": "padding",
+    "args": {
+      "padding": {
+        "top": vertical,
+        "bottom": vertical,
+        "left": horizontal,
+        "right": horizontal
+      },
+      "child": child
+    }
+  };
+
+  Padded.all(int padding, Blueprint child): blueprint = {
+    "type": "padding",
+    "args": {
+      "padding": {
+        "top": padding,
+        "bottom": padding,
+        "left": padding,
+        "right": padding
+      },
+      "child": child
+    }
+  };
+}
+
+
 extension type LabeledCheckbox._(Blueprint blueprint) implements Blueprint {
   LabeledCheckbox(String label, String variable): blueprint = {
     "type": "row",
@@ -41,6 +78,35 @@ extension type LabeledCheckbox._(Blueprint blueprint) implements Blueprint {
           "type": "text",
           "args": {
             "text": label,
+            "style": {
+              "fontSize": 15
+            }
+          }
+        }
+      ]
+    }
+  };
+}
+
+extension type LabeledAttribute._(Blueprint blueprint) implements Blueprint {
+  LabeledAttribute(String label, Object attribute): blueprint = {
+    "type": "row",
+    "args": {
+      "mainAxisAlignment": "spaceBetween",
+      "children": [
+        {
+          "type": "text",
+          "args": {
+            "text": label,
+            "style": {
+              "fontSize": 15
+            }
+          }
+        },
+        {
+          "type": "text",
+          "args": {
+            "text": attribute.toString(),
             "style": {
               "fontSize": 15
             }
