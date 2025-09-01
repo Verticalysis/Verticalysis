@@ -116,6 +116,10 @@ extension type SearchController(MonitorModeController mmc) {
         lowerCaseKeyword = keyword.toLowerCase();
       }
       final columns = mmc.vcxController.visibleColumns;
+      if(columns.isEmpty || mmc.vcxController.entries == 0) {
+        yield -1;
+        break;
+      }
       if(rowIndex >= mmc.vcxController.entries) {
         ++columnIndex;
         rowIndex = 0;
@@ -129,7 +133,7 @@ extension type SearchController(MonitorModeController mmc) {
         ), rowIndex + 1);
       } else rowIndex = (
         columnEntries as StringfiedView
-      ).typedView.indexWhere(type.from(keyword).matches, rowIndex + 1);
+      ).typedView.indexWhere(type.tryParse(keyword).matches, rowIndex + 1);
       if(rowIndex != -1) {
         mmc.selectionsModel.add(
           mmc.projectionsModel.current.indexAt(rowIndex)
@@ -140,12 +144,15 @@ extension type SearchController(MonitorModeController mmc) {
         ++columnIndex;
         rowIndex = 0;
         if(columnIndex >= columns.length) { // search reached the end
-          final (_, entries) = columns[prevColumnIndex];
-          if(type != AttrType.string ? !type.from(keyword).matches(
-            (entries as StringfiedView).typedView[prevRowIndex]
-          ) : !_matcher(keyword, lowerCaseKeyword, caseSensitive)(
-            entries[prevRowIndex])
-          ) yield -1;
+          if(prevColumnIndex < columns.length) {
+            final (name, entries) = columns[prevColumnIndex];
+            final type = mmc.pipelineModel.getAttrTypeByName(name);
+            if(type != AttrType.string ? !type.tryParse(keyword).matches(
+              (entries as StringfiedView).typedView[prevRowIndex]
+            ) : !_matcher(keyword, lowerCaseKeyword, caseSensitive)(
+              entries[prevRowIndex])
+            ) yield -1;
+          } else yield -1;
           columnIndex = 0;
         }
       }
@@ -157,12 +164,22 @@ extension type SearchController(MonitorModeController mmc) {
   ) => caseSensitive.value ? keyword.partOfMatchCase : lowerCaseKeyword.partOf;
 }
 
+extension on AttrType {
+  Comparable? tryParse(String literal) {
+    try {
+      return this.from(literal);
+    } catch(_) {
+      return null;
+    }
+  }
+}
+
 extension on String {
   bool partOfMatchCase(String? str) => str != null ? str.contains(this) : false;
   bool partOf(String? str) => str != null ? str.contains(this) : false;
 }
 
-extension on Comparable {
+extension on Comparable? {
   bool matches(Comparable? rhs) => rhs != null ? rhs == this : false;
 }
 
