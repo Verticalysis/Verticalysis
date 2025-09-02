@@ -5,8 +5,12 @@
 
 import 'Attribute.dart';
 import 'AttrType.dart';
+import 'CustomFormat.dart';
 import '../frontend/codecvt/Encoding.dart';
+import '../frontend/parser/Combinatorial.dart';
 import '../utils/TaggedMultiset.dart';
+
+export 'CustomFormat.dart'show CapturedMatchers;
 
 final class EmptyAttributesException implements Exception {
   const EmptyAttributesException();
@@ -67,6 +71,8 @@ final class CustomSchema extends Schema {
   String sourceFormat = "";
   String sourceDelimiter = "";
   Encoding sourceEncoding = Encoding.utf8;
+  CombinatorialParser customFormatParser = phonyCombinatorialParser;
+  CapturedMatchers customFormatCaptures = [];
 
   Iterable<Attribute> get nonVoidAttrs => attributes.where((a) => a.nonVoid);
 
@@ -116,11 +122,18 @@ final class CustomSchema extends Schema {
     ) case {
       "format": final T format,
     }) {
-      sourceFormat = visit<String>(format);
-      // sourceDelimiter = delimiter != null ? visit<String>(delimiter) : ;
       if(encoding case T enc) sourceEncoding = Encoding.of(notFound: (raw) {
         throw InvalidLiteralException("encoding", "Source.encoding", raw);
       }, name: visit<String>(enc));
+
+      if(visit(format) case final Map grammar) {
+        sourceFormat = "Custom";
+        customFormatParser = MatcherBuilder(
+          <R>(node) => visit<R>(node as T)
+        ).build(grammar, customFormatCaptures, sourceEncoding.decoder);
+      } else sourceFormat = visit<String>(format);
+
+      // sourceDelimiter = delimiter != null ? visit<String>(delimiter) : ;
     } else throw MissingSectionException(
       visit<Map>(source).keys.cast<String>(), "Source"
     );

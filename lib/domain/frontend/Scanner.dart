@@ -6,8 +6,10 @@
 import '../schema/Schema.dart';
 import '../utils/ListView.dart';
 import 'adapter/AnnotatedCSVadapter.dart';
+import 'adapter/CombinatorialAdapter.dart';
 import 'codecvt/UTF8Iterator.dart';
 import 'codecvt/Latin1Iterator.dart';
+import 'parser/Combinatorial.dart';
 import 'parser/CSVparser.dart';
 import 'schemaless/TransposeCSV.dart';
 
@@ -25,8 +27,17 @@ extension type Scanner(Schema schema) {
 
   static const _customSetups = {
     // "csv": _scanCustomCSV,
+    "Custom": _scanCustomFormat,
     "annotated_csv": _scanCustomAnnotatedCSV
   };
+
+  static Stream _scanCustomFormat(
+    Stream<List<int>> src, CustomSchema schema
+  ) => CombinatorialAdapter(schema).transform(Combinatorial(
+    schema.sourceEncoding.decoder,
+    schema.customFormatParser,
+    schema.customFormatCaptures.length
+  ).parse(src));
 
   static Stream _scanGenericCSV(Stream<List<int>> src) => CSVparser(
     UTF8Iterator.from
