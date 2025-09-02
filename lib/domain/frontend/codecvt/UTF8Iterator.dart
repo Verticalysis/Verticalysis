@@ -9,11 +9,17 @@ class UTF8Iterator implements Iterator<int> {
     int offset = 0, int current = -256
   ]): _offset = offset, _current = current;
 
-  final Iterable<int> _data;
+  UTF8Iterator._(): _data = const [], _offset = 0, _current = -256;
+
+  Iterable<int> _data;
   int _offset;
   int _current;
 
-  UTF8Iterator clone() => UTF8Iterator(_data, _offset, _current);
+  void _set(Iterable<int> data, int offset, int current) {
+    _current = current;
+    _offset = offset;
+    _data = data;
+  }
 
   @override
   int get current => _current;
@@ -63,6 +69,12 @@ class UTF8Iterator implements Iterator<int> {
     return true;
   }
 
+  @override
+  bool operator ==(Object other) => switch(other) {
+    final UTF8Iterator iter => iter._data == _data && iter._offset == _offset,
+    _ => false
+  };
+
   @pragma("vm:prefer-inline")
   bool _incomplete(int offset) {
     _current = -(_data.length - offset);
@@ -79,8 +91,12 @@ class UTF8Iterator implements Iterator<int> {
   @pragma("vm:prefer-inline")
   bool _isInvalid(int byte) => (byte & 0xC0) != 0x80;
 
-  static UTF8Iterator from(Iterable<int> src) => switch(src.iterator) {
-    final UTF8Iterator iter => iter.clone(),
-    _ => UTF8Iterator(src)
+  static UTF8Iterator from(
+    Iterable<int> src, [ Iterator<int> dst() = UTF8Iterator._ ]
+  ) => switch(src.iterator) {
+    final UTF8Iterator it => (
+      dst() as UTF8Iterator
+    ).._set(it._data, it._offset, it._current),
+    _ => (dst() as UTF8Iterator).._set(src, 0, 0)
   };
 }

@@ -14,7 +14,11 @@ enum Encoding {
 
   const Encoding(this.decoder);
 
-  final Decoder Function(Iterable<int> data) decoder;
+  final Decoder Function(Iterable<int> data, [Decoder Function()]) decoder;
+
+  /*R genericInvoke3<R, A1, A2, A3>(
+    R func<G extends Iterator<int>>(A1 _, A2 _, A3 _), A1 arg1, A2 arg2, A3 arg3
+  ) => func<T>(arg1, arg2, arg3);*/
 
   static Encoding of({
     required String name,

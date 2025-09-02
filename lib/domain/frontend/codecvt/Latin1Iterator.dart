@@ -7,10 +7,16 @@
 /// codepoints. Note this implementation does NOT reject undefined codepoints
 /// to maximize performance - it acts as a pass-through adapter for faster
 /// processing on inputs supposedly to be ASCII or Latin-1 encoded.
-class Latin1Iterator implements Iterator<int> {
+final class Latin1Iterator implements Iterator<int> {
   Latin1Iterator(this._data, [int offset = -1]): _offset = offset;
+  Latin1Iterator._(): _data = const [], _offset = -1;
 
-  final Iterable<int> _data;
+  void _set(Iterable<int> data, int offset) {
+    _data = data;
+    _offset = offset;
+  }
+
+  Iterable<int> _data;
   int _offset;
 
   @override
@@ -22,8 +28,18 @@ class Latin1Iterator implements Iterator<int> {
   @override
   bool moveNext() => ++_offset < _data.length;
 
-  static Latin1Iterator from(Iterable<int> src) => switch(src.iterator) {
-    final Latin1Iterator iter => Latin1Iterator(iter._data, iter._offset),
-    _ => Latin1Iterator(src)
+  @override
+  bool operator ==(Object other) => switch(other) {
+    final Latin1Iterator iter => iter._data == _data && iter._offset == _offset,
+    _ => false
+  };
+
+  static Latin1Iterator from(
+    Iterable<int> src, [ Iterator<int> dst() = Latin1Iterator._ ]
+  ) => switch(src.iterator) {
+    final Latin1Iterator iter => (
+      dst() as Latin1Iterator
+    ).._set(iter._data, iter._offset),
+    _ => (dst() as Latin1Iterator).._set(src, -1)
   };
 }
