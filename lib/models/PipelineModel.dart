@@ -47,19 +47,33 @@ final class PipelineModel extends ChangeNotifier {
     ) for(final attribute in sch.attributes) yield attribute;
   }
 
-  AttrType getAttrTypeByName(String name) {
+  (Attribute, CustomSchema)? _getAttrAndSchemaByName(String name) {
     for(final schema in schemas.reversed) if( // check newly added ones first
       schema case CustomSchema sch
-    ) if(sch.attributes.lookup(name) case Attribute attr) return attr.type;
-    return AttrType.string; // It's from a schemaless source, default to string
+    ) if(sch.attributes.lookup(name) case Attribute attr) return (attr, sch);
+    return null;
   }
 
-  Attribute getAttributeByName(String name) {
-    for(final schema in schemas.reversed) if( // check newly added ones first
-      schema case CustomSchema sch
-    ) if(sch.attributes.lookup(name) case Attribute attr) return attr;
-    return Attribute(name, name, AttrType.string);
-  }
+  AttrType getAttrTypeByName(
+    String name
+  ) => switch(_getAttrAndSchemaByName(name)) {
+    (final attr, _) => attr.type,
+    null => AttrType.string
+  };
+
+  Attribute getAttributeByName(
+    String name
+  ) => switch(_getAttrAndSchemaByName(name)) {
+    (final attr, _) => attr,
+    null => Attribute(name, name, AttrType.string)
+  };
+
+  CustomSchema? getContainingSchemaByAttrName(
+    String name
+  ) => switch(_getAttrAndSchemaByName(name)) {
+    (_, final sch) => sch,
+    null => null
+  };
 
   Framer get framer => Framer(32768); // TODO: make chunk size configurable
 
