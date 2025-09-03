@@ -30,14 +30,16 @@ final class MonitorModeController {
   final vcxController = VerticatrixController();
   final PipelineModel pipelineModel;
   final ProjectionsModel projectionsModel;
+  final Channel<Notifer1<int>> _entriesUpdateChannel;
 
   MonitorModeController(
     ByteStream stream,
     Schema schema,
     EventManifold evtManifold,
     this.dispatcher,
-  ): pipelineModel = PipelineModel(evtManifold)..connect(schema, stream),
-    projectionsModel = ProjectionsModel(
+  ) : _entriesUpdateChannel = dispatcher.getChannel(Event.entriesUpdate),
+      pipelineModel = PipelineModel(evtManifold)..connect(schema, stream),
+      projectionsModel = ProjectionsModel(
       evtManifold, schema.chronologicallySortedBy
     ) {
     projectionsModel.onSizeChange = onEntriesUpdate;
@@ -57,6 +59,8 @@ final class MonitorModeController {
       (Filter filter) {
         vcxController.regionState.regionReset();
         projectionsModel.append(filter);
+        _entriesUpdateChannel.notify(projectionsModel.currentLength);
+        updateScrollModel();
       }
     );
     dispatcher.listen(
@@ -64,6 +68,8 @@ final class MonitorModeController {
       (Iterable<Filter> filter) {
         vcxController.regionState.regionReset();
         projectionsModel.splice(filter);
+        _entriesUpdateChannel.notify(projectionsModel.currentLength);
+        updateScrollModel();
       }
     );
     dispatcher.listen(
@@ -71,6 +77,8 @@ final class MonitorModeController {
       () {
         vcxController.regionState.regionReset();
         projectionsModel.clear();
+        _entriesUpdateChannel.notify(projectionsModel.currentLength);
+        updateScrollModel();
       }
     );
     dispatcher.listen(
@@ -106,6 +114,7 @@ final class MonitorModeController {
     int entries
   ) => WidgetsBinding.instance.addPostFrameCallback((_) {
     vcxController.entries = entries;
+    _entriesUpdateChannel.notify(entries);
     updateScrollModel();
   });
 

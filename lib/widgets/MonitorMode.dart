@@ -159,13 +159,7 @@ final class MonitorMode extends StatelessWidget {
           ]
         ),
       ),
-      MiniMap(
-        _controller.projectionsModel,
-        _controller.scrollModel,
-        _controller.selectionsModel,
-        _controller.onMiniMapSliderDrag,
-        108
-      ),
+      MiniMap(_controller, _controller.onMiniMapSliderDrag, 108),
       Expanded(child: Container(
         child: Theme(
           data: Theme.of(context).copyWith(
@@ -416,7 +410,7 @@ final class MonitorMode extends StatelessWidget {
     ),
     _ => FlutterPlatformAlert.showAlert(
       windowTitle: 'Unknown Error',
-      text: error.toString(),
+      text: "$error\n$t",
       iconStyle: IconStyle.warning,
     ),
   };

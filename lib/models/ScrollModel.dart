@@ -38,8 +38,13 @@ final class ScrollModel extends ChangeNotifier {
   /// When scrolling with [scaling] = [Scaling.chrono], the window size is
   /// likely not a constant, hence both edges need to be recalculated.
   void setBothEdges(double upper, double lower, List<int?> refColumn) {
-    _upper = _normalize(_upper, upper, refColumn);
-    _lower = _normalize(_lower, lower, refColumn);
+    if(refColumn.isNotEmpty) {
+      _upper = _normalize(_upper, upper, refColumn);
+      _lower = _normalize(_lower, lower, refColumn);
+    } else {
+      _upper = 0;
+      _lower = 1;
+    }
     notifyListeners();
   }
 
@@ -65,8 +70,9 @@ final class ScrollModel extends ChangeNotifier {
         return _upper * refColumn.length;
       } else return _upper * refColumn.length;
     } else {
-      _upper = (_upper + normalizedDelta).clamp(0, 1 - window);
-      _lower = (_lower + normalizedDelta).clamp(0, 1);
+      final savedWindow = window;
+      _upper = (_upper + normalizedDelta).clamp(0, 1 - savedWindow);
+      _lower = (_lower + normalizedDelta).clamp(savedWindow, 1);
       notifyListeners();
       return _upper * refColumn.length;
     }

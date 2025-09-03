@@ -14,6 +14,8 @@ import '../domain/amorphous/Projection.dart';
 import '../models/ProjectionsModel.dart';
 import '../models/ScrollModel.dart';
 import '../models/SelectionsModel.dart';
+import 'helper/Events.dart';
+import 'helper/MonitorModeController.dart';
 import 'shared/Hoverable.dart';
 
 enum Mode {
@@ -41,21 +43,25 @@ enum Mode {
     BoxConstraints bc,
     ProjectionsModel projections,
     SelectionsModel selections
-  ) => CustomPaint(
-    size: Size(bc.maxWidth, bc.maxHeight),
-    painter: ScrollbarMarksPainter(
-      itemCount: projections.currentLength,
-      minSpace: 120,
-      markColor: ColorScheme.of(context).surface,
-      textStyle: TextTheme.of(context).labelSmall!
-    ),
-    foregroundPainter: SelectionsPainter(
-      selections,
-      projections,
-      ColorScheme.of(context).secondary
-    ),
-    //child: Listener(onPointerMove: )
+  ) => ListenableBuilder(
+    listenable: selections,
+    builder: (_, _) => CustomPaint(
+      size: Size(bc.maxWidth, bc.maxHeight),
+      painter: ScrollbarMarksPainter(
+        itemCount: projections.currentLength,
+        minSpace: 120,
+        markColor: ColorScheme.of(context).surface,
+        textStyle: TextTheme.of(context).labelSmall!
+      ),
+      foregroundPainter: SelectionsPainter(
+        selections,
+        projections,
+        ColorScheme.of(context).secondary
+      ),
+      //child: Listener(onPointerMove: )
+    )
   );
+
 
   static Widget histogramVisualBuilder(
     BuildContext context,
@@ -80,6 +86,7 @@ enum Mode {
 // 2.
 final class MiniMap extends StatelessWidget {
   final _mode = ValueNotifier(Mode.scalemark);
+  final ValueNotifier<int> _entries;
 
   final void Function(double normalizedDelta) onDrag;
 
@@ -92,8 +99,15 @@ final class MiniMap extends StatelessWidget {
   static const _minSliderWidth = 15.0;
 
   MiniMap(
-    this._projections, this._scroll, this._selections, this.onDrag, this.height
-  );
+    MonitorModeController mmc, this.onDrag, this.height
+  ) : _projections = mmc.projectionsModel,
+      _selections = mmc.selectionsModel,
+      _scroll = mmc.scrollModel,
+      _entries = ValueNotifier(mmc.projectionsModel.currentLength) {
+    mmc.dispatcher.listen(
+      Event.entriesUpdate, (entries) => _entries.value = entries
+    );
+  }
 
   @override
   Widget build(BuildContext context) => LayoutBuilder(
@@ -103,11 +117,13 @@ final class MiniMap extends StatelessWidget {
       child: ValueListenableBuilder(
         valueListenable: _mode,
         builder: (context, mode, _) => Stack(children: [
-          ListenableBuilder(
-            listenable: _projections,
-            builder: (context, _) => mode.visualBuilder(
+          ValueListenableBuilder(
+            valueListenable: _entries,
+            builder: (
+              context, entries, _
+            ) => entries > 0 ? mode.visualBuilder(
               context, constraints, _projections, _selections
-            )
+            ) : const SizedBox.shrink()
           ),
           ListenableBuilder( // slider
             listenable: _scroll,
