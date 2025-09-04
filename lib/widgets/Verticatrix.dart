@@ -86,6 +86,10 @@ final class VerticatrixController {
     String column
   ) => columnControllers.putIfAbsent(column, verticalControllers.addAndGet);
 
+  void setInitialWidth(
+    String column, double width
+  ) => columnWidths[column] = ValueNotifier(width);
+
   void highlight(int index, String column) {
     scroll2index(index.toDouble());
     regionState.selectSingle(index, visibleColumns.indexWhere(

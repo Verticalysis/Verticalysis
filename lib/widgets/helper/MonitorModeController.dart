@@ -48,11 +48,16 @@ final class MonitorModeController {
     }, projectionsModel.currentLength);
     vcxController.onScroll = updateScrollModel;
     evtManifold.onNewColumns = (columns) {
-      for(final column in columns) vcxController.addColumn(
-        column, projectionsModel.getColumn(
+      for(final column in columns) {
+        if(pipelineModel.getContainingSchemaByAttrName(column)
+          case final CustomSchema sch
+        ) if(sch.initialWidths[column]
+          case final double width
+        ) vcxController.setInitialWidth(column, width);//print("$column $width");//
+        vcxController.addColumn(column, projectionsModel.getColumn(
           column, pipelineModel.getAttrTypeByName
-        )
-      );
+        ));
+      }
     };
     dispatcher.listen(
       Event.projectionAppend,

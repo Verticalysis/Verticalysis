@@ -78,6 +78,8 @@ final class CustomSchema extends Schema {
 
   final attributes = TaggedMultiset<Attribute>([]);
 
+  final initialWidths = <String, double> {};
+
   final srcAttrs = <String>[];
 
   // Validation of the schema is
@@ -140,7 +142,7 @@ final class CustomSchema extends Schema {
   }
 
   void _initAttr<T>(Map attr, R visit<R>(T ast)) {
-    T? defaultVal, transform, options, source;
+    T? defaultVal, transform, options, source, width;
     if(attr..retrieve<T>(
       "options", (val) => options = val
     )..retrieve<T>(
@@ -149,18 +151,21 @@ final class CustomSchema extends Schema {
       "transform", (val) => transform = val
     )..retrieve<T>(
       "default", (val) => defaultVal = val
+    )..retrieve<T>(
+      "columnWidth", (val) => width = val
     ) case {
       "name": final T name,
       "type": final T type,
     }) {
+      final attrName = visit<String>(name);
       final src = switch(source) {
         final T field => visit<String>(field),
-        _ => visit<String>(name)
+        _ => attrName
       };
       final attr = AttrType.of(
         visit<String>(type),
         (raw) => throw InvalidLiteralException("type", "Attributes.type", raw)
-      ).createAttribute(visit<String>(name) , src);
+      ).createAttribute(attrName , src);
       if(options != null) ;
 
       if(transform case final T transform) for(
@@ -174,6 +179,12 @@ final class CustomSchema extends Schema {
           attr.type.keyword, "Attributes.default", visit<String>(val)
         );
       }
+
+      if(width case final T width) {
+        initialWidths[attrName] = visit<num>(width).toDouble();
+      } else if(
+        attr.type == AttrType.absoluteTime || attr.type == AttrType.relativeTime
+      ) initialWidths[attrName] = 210.0;
 
       if(!attributes.add(attr)) throw DuplicatedAttributeException(attr);
       if(!srcAttrs.contains(src)) srcAttrs.add(src);
