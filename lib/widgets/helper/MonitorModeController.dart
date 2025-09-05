@@ -145,7 +145,9 @@ final class MonitorModeController {
   }
 
   AttrType? getAttrTypeByName(String name) {
-    if(!vcxController.visibleColumns.contains(name)) return null;
-    return pipelineModel.getAttrTypeByName(name);
+    for(final (col, _) in vcxController.visibleColumns) if(
+      col == name
+    ) return pipelineModel.getAttrTypeByName(name);
+    return null;
   }
 }
