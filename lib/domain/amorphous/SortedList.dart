@@ -40,7 +40,7 @@ extension type SortedList<T extends Comparable>(
 
     while (low < high) {
       final mid = low + ((high - low) >> 1);
-      if (list[mid].compareTo(val) < 0) {
+      if (compare(list[mid], val) < 0) {
         low = mid + 1;
       } else {
         high = mid;

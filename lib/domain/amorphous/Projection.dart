@@ -160,9 +160,9 @@ class Projection {
 }
 
 extension on SparseVector<Comparable?> {
-  int indexedCmp(int lhs, int rhs) => switch(this[lhs]) {
-    final Comparable l => this[rhs] != null ? l.compareTo(this[rhs]) : -1,
-    null => -1,
+  int indexedCmp(int lhs, int rhs) => switch((this[lhs], this[rhs])) {
+    (final Comparable lv, final Comparable rv) => lv.compareTo(rv),
+    _ => -1,
   };
 }
 
