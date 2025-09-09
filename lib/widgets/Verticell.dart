@@ -322,8 +322,6 @@ final class PrimaryRowHeaderBuilder {
     _expandToolViewCh = mmc.getChannel(Event.expandToolView),
     _collectionAppendCh = mmc.getChannel(Event.collectionAppend);
 
-  int rawIndex(int rowIndex) => mmc.currentProjection.indexAt(rowIndex);
-
   Widget build(BuildContext context, int rowIndex) => GestureDetector(
     onTap: () => onClick(rowIndex),
     child: Container(
@@ -350,30 +348,30 @@ final class PrimaryRowHeaderBuilder {
         child: Text("Collect", style: TextTheme.of(context).titleMedium),
         onPressed: () {
           _expandToolViewCh.notify(Toolset.collect);
-          _collectionAppendCh.notify(rawIndex(rowIndex));
+          _collectionAppendCh.notify(mmc.row2index(rowIndex));
         }
       )
     )
   );
 
   void onClick(int rowIndex) {
-    final isSelected = mmc.selectionsModel.isSelected(rawIndex(rowIndex));
+    final isSelected = mmc.selectionsModel.isSelected(mmc.row2index(rowIndex));
     final isControlPressed = HardwareKeyboard.instance.isControlPressed;
     final isMultipleSelect = mmc.selectionsModel.count > 1;
     if(!isControlPressed) mmc.selectionsModel.clear();
     if(!isSelected) {
-      mmc.selectionsModel.add(rawIndex(rowIndex));
+      mmc.addSelection(rowIndex);
     } else if(isControlPressed) { // remove selected when ctrl is pressed
-      mmc.selectionsModel.remove(rawIndex(rowIndex));
+      mmc.selectionsModel.remove(mmc.row2index(rowIndex));
     } else if(isMultipleSelect) { // switch to single select from multi-select
-      mmc.selectionsModel.add(rawIndex(rowIndex));
+      mmc.addSelection(rowIndex);
     }
   }
 
   T selectedOrNot<I, T>(
     int rowIndex, I interm, T selected(I interm), T unselected(I interm)
   ) => mmc.selectionsModel.isSelected(
-    rawIndex(rowIndex)
+    mmc.row2index(rowIndex)
   ) ? selected(interm) : unselected(interm);
 }
 

@@ -115,6 +115,10 @@ final class MonitorModeController {
 
   void initChannels() => dispatcher.syncChannels();
 
+  int row2index(int row) => currentProjection.indexAt(row);
+
+  void addSelection(int row) => selectionsModel.add(row2index(row));
+
   void onEntriesUpdate(
     int entries
   ) => WidgetsBinding.instance.addPostFrameCallback((_) {
