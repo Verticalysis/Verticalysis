@@ -85,7 +85,10 @@ final class Collect extends StatelessWidget {
               shape: const RoundedRectangleBorder(borderRadius: rectBorder),
               fixedSize: const Size.square(13.5)
             ),
-            onPressed: _projections.current.clear,
+            onPressed: () {
+              primaryVcxController.entries = 0;
+              _projections.current.clear();
+            }
           ),
           Vdivider(color: ColorScheme.of(context).onSurface),
           /*CheckboxListTile(
