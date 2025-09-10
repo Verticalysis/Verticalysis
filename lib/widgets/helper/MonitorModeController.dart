@@ -31,13 +31,15 @@ final class MonitorModeController {
   final PipelineModel pipelineModel;
   final ProjectionsModel projectionsModel;
   final Channel<Notifer1<int>> _entriesUpdateChannel;
+  final Channel<Notifer1<List<String>>> _newColumnsChannel;
 
   MonitorModeController(
     ByteStream stream,
     Schema schema,
     EventManifold evtManifold,
     this.dispatcher,
-  ) : _entriesUpdateChannel = dispatcher.getChannel(Event.entriesUpdate),
+  ) : _newColumnsChannel = dispatcher.getChannel(Event.newColumns),
+      _entriesUpdateChannel = dispatcher.getChannel(Event.entriesUpdate),
       pipelineModel = PipelineModel(evtManifold)..connect(schema, stream),
       projectionsModel = ProjectionsModel(
       evtManifold, schema.chronologicallySortedBy
@@ -53,11 +55,12 @@ final class MonitorModeController {
           case final CustomSchema sch
         ) if(sch.initialWidths[column]
           case final double width
-        ) vcxController.setInitialWidth(column, width);//print("$column $width");//
+        ) vcxController.setInitialWidth(column, width);
         vcxController.addColumn(column, projectionsModel.getColumn(
           column, pipelineModel.getAttrTypeByName
         ));
       }
+      _newColumnsChannel.notify(columns);
     };
     dispatcher.listen(
       Event.projectionAppend,

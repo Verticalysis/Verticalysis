@@ -11,7 +11,7 @@ import 'EventDispatcher.dart';
 export 'EventDispatcher.dart';
 
 enum Event<T extends Function> implements Topic<T> {
-  newColumns(notifier1<String>),
+  newColumns(notifier1<List<String>>),
   newTrace(notifier1<String>),
   entriesUpdate(notifier1<int>),
   selectRegionUpdate(notifier3<int, int, Iterable<(String, List<String?>)>>),
