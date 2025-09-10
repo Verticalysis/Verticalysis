@@ -22,7 +22,6 @@ final class Collect extends StatelessWidget {
   final MonitorModeController mmc;
   final ProjectionsModel _projections;
 
-  PipelineModel get _pipeline => mmc.pipelineModel;
   SelectionsModel get _selections => mmc.selectionsModel;
 
   final _expandHeaders = ValueNotifier(true);
@@ -33,9 +32,11 @@ final class Collect extends StatelessWidget {
   static final phonyChangeNotifier = PhonyChangeNotifier();
 
   Collect(this.mmc, this._projections, this.linkedVcxController) {
+    mmc.listen(Event.newColumns, (_) => syncAll());
     mmc.listen(Event.collectionAppend, (int index) {
       _projections.current.include([index]);
       primaryVcxController.entries = _projections.current.length;
+      syncAll();
     });
     mmc.listen(Event.collectionRemove, (int row) {
       _projections.current.remove(row);
@@ -70,9 +71,7 @@ final class Collect extends StatelessWidget {
             onPressed: () {
               _projections.current.include(_selections.selections.toList());
               primaryVcxController.syncWith(linkedVcxController);
-              primaryVcxController.syncColumns((id) {
-                return _projections.getColumn(id, _pipeline.getAttrTypeByName);
-              }, _projections.current.length);
+              syncAll();
             },
           ),
           IconButton(
@@ -148,9 +147,7 @@ final class Collect extends StatelessWidget {
       builder: (context, expandHeaders, _) => buildVerticatrix(
         ColorScheme.of(context),
         TextTheme.of(context),
-        primaryVcxController..syncWith(linkedVcxController)..syncColumns((id) {
-          return _projections.getColumn(id, _pipeline.getAttrTypeByName);
-        }, _projections.current.length),
+        syncAll(),
         expandHeaders ?
         CollectHeaderBuilder(mmc).build :
         (_, _, _, _) => SizedBox.shrink(),
@@ -161,6 +158,12 @@ final class Collect extends StatelessWidget {
       )
     ))
   ]);
+
+  VerticatrixController syncAll() => primaryVcxController..syncWith(
+    linkedVcxController
+  )..syncColumns((id) {
+    return _projections.getColumn(id, mmc.pipelineModel.getAttrTypeByName);
+  }, _projections.current.length);
 }
 
 class PhonyChangeNotifier extends ChangeNotifier {}
