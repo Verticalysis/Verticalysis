@@ -145,19 +145,22 @@ final class Collect extends StatelessWidget {
         ]
       ),
     ),
-    Expanded(child: ValueListenableBuilder(
-      valueListenable: _expandHeaders,
-      builder: (context, expandHeaders, _) => buildVerticatrix(
-        ColorScheme.of(context),
-        TextTheme.of(context),
-        syncAll(),
-        expandHeaders ?
-        CollectHeaderBuilder(mmc).build :
-        (_, _, _, _) => SizedBox.shrink(),
-        CollectRowHeaderBuilder(mmc).build,
-        phonyChangeNotifier,
-        Formatter.formatters,
-        showHeaderBackground: expandHeaders
+    Expanded(child: ListenableBuilder(
+      listenable: _projections,
+      builder: (_, _) => ValueListenableBuilder(
+        valueListenable: _expandHeaders,
+        builder: (context, expandHeaders, _) => buildVerticatrix(
+          ColorScheme.of(context),
+          TextTheme.of(context),
+          syncAll(),
+          expandHeaders ?
+          CollectHeaderBuilder(_projections).build :
+          (_, _, _, _) => SizedBox.shrink(),
+          CollectRowHeaderBuilder(mmc).build,
+          phonyChangeNotifier,
+          Formatter.formatters,
+          showHeaderBackground: expandHeaders
+        )
       )
     ))
   ]);

@@ -11,11 +11,9 @@ import 'package:flutter/services.dart';
 
 import '../models/FiltersModel.dart';
 import '../models/ProjectionsModel.dart';
-import '../models/SelectionsModel.dart';
 import 'helper/Events.dart';
 import 'helper/FilterMode.dart';
 import 'helper/MonitorModeController.dart';
-import 'shared/Extensions.dart';
 import 'shared/Select.dart';
 import 'Style.dart';
 
@@ -46,7 +44,7 @@ extension type Header._(Container container) implements Widget {
     String columnName,
     TextStyle style,
     double height,
-    MonitorModeController mmc
+    ProjectionsModel projections
   ): container = Container(
     height: height,
     color: ColorScheme.of(context).surface,
@@ -55,7 +53,7 @@ extension type Header._(Container container) implements Widget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(columnName, style: TextTheme.of(context).bodyMedium),
-        switch(mmc.currentProjection.currentlySortedBy) {
+        switch(projections.current.currentlySortedBy) {
           (final column, true) => column == columnName ? Icon(
             Icons.arrow_drop_down,
             color: ColorScheme.of(context).onSurfaceVariant,
@@ -80,24 +78,24 @@ extension type PrimaryHeaderBuilder(MonitorModeController mmc) {
     TextStyle style,
     double height
   ) => columnName.isNotEmpty ? Header(
-    context, columnName, style, height, mmc
+    context, columnName, style, height, mmc.projectionsModel
   ).withTooltip(context, HeaderTray(columnName, mmc)) : Header(
-    context, columnName, style, height, mmc
+    context, columnName, style, height, mmc.projectionsModel
   );
 }
 
-extension type CollectHeaderBuilder(MonitorModeController mmc) {
+extension type CollectHeaderBuilder(ProjectionsModel projections) {
   Widget build(
     BuildContext context,
     String columnName,
     TextStyle style,
     double height
   ) => columnName.isNotEmpty ? Header(
-    context, columnName, style, height, mmc
+    context, columnName, style, height, projections
   ).withTooltip(
-    context, CollectHeaderTray(mmc.projectionsModel, columnName)
+    context, CollectHeaderTray(projections, columnName)
   ) : Header(
-    context, columnName, style, height, mmc
+    context, columnName, style, height, projections
   );
 }
 
