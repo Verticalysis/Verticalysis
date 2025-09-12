@@ -3,17 +3,16 @@
 // GPLv3 license. Use of this file is governed by terms and conditions that
 // can be found in the COPYRIGHT file.
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide SearchController;
 import 'package:flutter/services.dart';
 import 'package:flutter_platform_alert/flutter_platform_alert.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
-import '../domain/schema/AttrType.dart';
 import '../models/FiltersModel.dart';
-import '../models/ProjectionsModel.dart';
 import 'helper/Events.dart';
 import 'helper/MonitorModeController.dart';
 import 'helper/PhlexFilter.dart';
+import 'helper/SearchController.dart';
 import 'shared/Clickable.dart';
 import 'shared/Hoverable.dart';
 import 'shared/Select.dart';
@@ -32,7 +31,26 @@ enum Mode {
 
   static void _search(UnifinderController controller) {
     if(controller.keyword.isEmpty) return;
-    controller._searching.moveNext();
+    final searchCtrl = controller._searchController;
+
+    searchCtrl.resetStateIfKeywordChanged(controller.keyword);
+
+    final (found, freshStart) = searchCtrl.findNext(
+      controller.keyword, controller._case.value
+    );
+
+    if(found) {
+      searchCtrl.highlightMatch();
+      controller._addSelection(searchCtrl.rowIndex);
+    } else if(!freshStart) {
+      if(searchCtrl.findNext(
+        controller.keyword, controller._case.value
+      ) case (true, _)) {
+        searchCtrl.highlightMatch();
+        controller._addSelection(searchCtrl.rowIndex);
+        // TODO: hint user the search wrapped
+      }
+    }
   }
 
   static void _filter(UnifinderController controller) {
@@ -100,88 +118,22 @@ final class ModeSwitcher extends StatelessWidget {
   );
 }
 
-extension type SearchController(MonitorModeController mmc) {
-  Iterable<int> search(
-    TextEditingController input, ValueNotifier<bool> caseSensitive
-  ) sync* {
-    int columnIndex = 0, rowIndex = 0;
-    String keyword = "";
-    String lowerCaseKeyword = ""; // precompute to avoid repetitive allocation
-    while(true) {
-      final (prevColumnIndex, prevRowIndex) = (columnIndex, rowIndex);
-      if(keyword != input.text) {
-        mmc.selectionsModel.clear();
-        columnIndex = rowIndex = 0;
-        keyword = input.text;
-        lowerCaseKeyword = keyword.toLowerCase();
-      }
-      final columns = mmc.vcxController.visibleColumns;
-      if(columns.isEmpty || mmc.vcxController.entries == 0) {
-        yield -1;
-        break;
-      }
-      if(rowIndex >= mmc.vcxController.entries) {
-        ++columnIndex;
-        rowIndex = 0;
-      }
-      if(columnIndex >= columns.length) columnIndex = 0;
-      final (columnName, columnEntries) = columns[columnIndex];
-      final type = mmc.pipelineModel.getAttrTypeByName(columnName);
-      if(type == AttrType.string) {
-        rowIndex = columnEntries.indexWhere(_matcher(
-          keyword, lowerCaseKeyword, caseSensitive
-        ), rowIndex + 1);
-      } else rowIndex = (
-        columnEntries as StringfiedView
-      ).typedView.indexWhere(type.tryParse(keyword).matches, rowIndex + 1);
-      if(rowIndex != -1) {
-        mmc.selectionsModel.add(
-          mmc.projectionsModel.current.indexAt(rowIndex)
-        );
-        mmc.vcxController.highlight(rowIndex, columnName);
-        yield rowIndex;
-      } else { // search reached the end of a column
-        ++columnIndex;
-        rowIndex = 0;
-        if(columnIndex >= columns.length) { // search reached the end
-          if(prevColumnIndex < columns.length) {
-            final (name, entries) = columns[prevColumnIndex];
-            final type = mmc.pipelineModel.getAttrTypeByName(name);
-            if(type != AttrType.string ? !type.tryParse(keyword).matches(
-              (entries as StringfiedView).typedView[prevRowIndex]
-            ) : !_matcher(keyword, lowerCaseKeyword, caseSensitive)(
-              entries[prevRowIndex])
-            ) yield -1;
-          } else yield -1;
-          columnIndex = 0;
-        }
-      }
-    }
-  }
+mixin KeywordMonitor {
+  String _keyword = "";
+  void Function() resetSelections = () {};
 
-  static bool Function(String? _) _matcher(
-    String keyword, String lowerCaseKeyword, ValueNotifier<bool> caseSensitive
-  ) => caseSensitive.value ? keyword.partOfMatchCase : lowerCaseKeyword.partOf;
-}
+  void reset();
 
-extension on AttrType {
-  Comparable? tryParse(String literal) {
-    try {
-      return this.from(literal);
-    } catch(_) {
-      return null;
-    }
+  void resetStateIfKeywordChanged(String keyword) {
+    if(keyword ==_keyword) return;
+
+    _keyword = keyword;
+    resetSelections();
+    reset();
   }
 }
 
-extension on String {
-  bool partOfMatchCase(String? str) => str != null ? str.contains(this) : false;
-  bool partOf(String? str) => str != null ? str.contains(this) : false;
-}
-
-extension on Comparable? {
-  bool matches(Comparable? rhs) => rhs != null ? rhs == this : false;
-}
+final class UnifinderSearchController = SearchController with KeywordMonitor;
 
 final class UnifinderController {
   factory UnifinderController(
@@ -190,7 +142,6 @@ final class UnifinderController {
     ValueNotifier(true),
     TagsEditingController(mmc),
     TextEditingController(text: keyword),
-    SearchController(mmc),
     mmc
   );
 
@@ -198,13 +149,12 @@ final class UnifinderController {
     this._case,
     this.tagsEditingController,
     this.textEditingController,
-    SearchController searchController,
     MonitorModeController mmc,
-  ): _attrAccessor = mmc.getAttrTypeByName,
-    _columnAccessor = mmc.getTypedColumn,
-    _searching = searchController.search(
-    textEditingController, _case
-  ).iterator {
+  ) : _addSelection = mmc.addSelection,
+      _attrAccessor = mmc.getAttrTypeByName,
+      _columnAccessor = mmc.getTypedColumn,
+      _searchController = UnifinderSearchController(mmc.vcxController, mmc.pipelineModel) {
+    _searchController.resetSelections = mmc.selectionsModel.clear;
     mmc.listen(Event.filterAppend, (_) {
       if(_mode.value != Mode.filter) _mode.value = Mode.filter;
     });
@@ -218,12 +168,14 @@ final class UnifinderController {
     };
   }
 
+  final void Function(int _) _addSelection;
+
   final TagsEditingController tagsEditingController;
   final TextEditingController textEditingController;
   final _mode = ValueNotifier(Mode.find);
   final ValueNotifier<bool> _case;
 
-  final Iterator<int> _searching;
+  final UnifinderSearchController _searchController;
 
   final AttrAccessor _attrAccessor;
   final ColumnAccessor _columnAccessor;
