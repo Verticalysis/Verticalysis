@@ -69,8 +69,11 @@ final class VerticatrixController {
     });
   }
 
-  set entries(int count) => _entries.value = count;
   int get entries => _entries.value;
+  set entries(int count) {
+    if(count < _entries.value) regionState.regionReset();
+    _entries.value = count;
+  }
 
   double get scrollPosition => rowHeaderController.offset;
   double get viewPortHeight => rowHeaderController.position.viewportDimension;
