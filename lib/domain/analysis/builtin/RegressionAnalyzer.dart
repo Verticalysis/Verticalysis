@@ -32,7 +32,7 @@ final class RegressionAnalyzer extends VectorAnalyzer {
   @override
   bool applicable(
     Iterable<AttrType<Comparable>> attributes
-  ) => attributes.length == 1 && attributes.first.allowCast<num>();
+  ) => attributes.length == 2 && attributes.first.allowCast<num>();
 
   @override
   Map<String, dynamic> analyze(

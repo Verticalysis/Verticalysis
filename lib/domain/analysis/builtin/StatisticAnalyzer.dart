@@ -50,7 +50,7 @@ final class StatisticAnalyzer extends VectorAnalyzer {
   @override
   bool applicable(
     Iterable<AttrType<Comparable>> attributes
-  ) => attributes.length == 1 && attributes.first.allowCast<num>();
+  ) => true;
 
   @override
   Map<String, dynamic> analyze(

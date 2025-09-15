@@ -268,142 +268,145 @@ final class AnalysisSession extends StatelessWidget {
   static const _hoveringEntry = BoxDecoration(color: optionHovered);
 
   @override
-  Widget build(BuildContext context) => Row(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      SizedBox(       // analyzers list
-        width: 192,
-        child: FadedSliver(
-          scrollController: _scrollController,
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: _analysisCandidates,
+    builder: (context, _) => Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(       // analyzers list
+          width: 192,
+          child: FadedSliver(
+            scrollController: _scrollController,
+            child: ValueListenableBuilder(
+              valueListenable: _selected,
+              builder: (context, selected, _) => ListView.separated(
+                controller: _scrollController,
+                padding: EdgeInsets.all(0.0),
+                itemCount: _controller.filterApplicable(_analysisCandidates.candidateTypes),
+                itemBuilder: (context, i) => Clickable(
+                  HoverEffect(
+                    height: 42,
+                    align: Alignment.centerLeft,
+                    padding: const EdgeInsets.fromLTRB(15, 6, 12, 6),
+                    inactiveCosmetic: _inactiveEntry,
+                    hoveringCosmetic: _hoveringEntry,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(_controller.enumerate(i).name, style: TextStyle(
+                          fontSize: 15,
+                          color: selected == i ?
+                            ColorScheme.of(context).primary :
+                            ColorScheme.of(context).onSurfaceVariant
+                        )),
+                        Tooltip(
+                          message: _controller.enumerate(i).isVectorAnalyzer ?
+                            "Vector Analysis" :
+                            "Scalar Analysis",
+                          child: Icon(
+                            _controller.enumerate(i).isVectorAnalyzer ?
+                              Icons.playlist_add_check:
+                              Icons.checklist_rtl,
+                            color: ColorScheme.of(context).onSurfaceVariant,
+                            size: 20
+                          )
+                        )
+                      ],
+                    )
+                  ),
+                  onClick: () => _selected.value = _controller.updatePanel(i)
+                ),
+                separatorBuilder: (context, _) => Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 13),
+                  color: ColorScheme.of(context).onSurface,
+                  height: 0.6,
+                ),
+              ),
+            )
+          )
+        ),
+        Expanded(child: SingleChildScrollView(  // details of the selected
+          padding: const EdgeInsets.fromLTRB(15, 0, 12, 0),
           child: ValueListenableBuilder(
             valueListenable: _selected,
-            builder: (context, selected, _) => ListView.separated(
-              controller: _scrollController,
-              padding: EdgeInsets.all(0.0),
-              itemCount: _controller.analyzers,
-              itemBuilder: (context, i) => Clickable(
-                HoverEffect(
-                  height: 42,
-                  align: Alignment.centerLeft,
-                  padding: const EdgeInsets.fromLTRB(15, 6, 12, 6),
-                  inactiveCosmetic: _inactiveEntry,
-                  hoveringCosmetic: _hoveringEntry,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(_controller.enumerate(i).name, style: TextStyle(
-                        fontSize: 15,
-                        color: selected == i ?
-                          ColorScheme.of(context).primary :
-                          ColorScheme.of(context).onSurfaceVariant
+            builder: (context, selected, _) => Column(children: [
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(_controller.enumerate(selected).name, style: TextStyle(
+                    color: ColorScheme.of(context).onSurfaceVariant,
+                    fontSize: 20
+                  )),
+                  Clickable(
+                    HoverEffect(
+                      inactiveCosmetic: BoxDecoration(
+                        color: ColorScheme.of(context).onPrimaryFixed,
+                        borderRadius: const BorderRadius.all(Radius.circular(3))
+                      ),
+                      hoveringCosmetic: BoxDecoration(
+                        color: ColorScheme.of(context).primary,
+                        borderRadius: const BorderRadius.all(Radius.circular(3))
+                      ),
+                      align: const Alignment(.0, -0.1),
+                      height: 27,
+                      width: 72,
+                      child: Text("Analyze", style: TextStyle(
+                        fontSize: 13, color: Color(0xFFFFFFFF)
                       )),
-                      Tooltip(
-                        message: _controller.enumerate(i).isVectorAnalyzer ?
-                          "Vector Analysis" :
-                          "Scalar Analysis",
-                        child: Icon(
-                          _controller.enumerate(i).isVectorAnalyzer ?
-                            Icons.playlist_add_check:
-                            Icons.checklist_rtl,
-                          color: ColorScheme.of(context).onSurfaceVariant,
-                          size: 20
-                        )
-                      )
-                    ],
-                  )
-                ),
-                onClick: () => _selected.value = _controller.updatePanel(i)
-              ),
-              separatorBuilder: (context, _) => Container(
-                margin: const EdgeInsets.symmetric(horizontal: 13),
-                color: ColorScheme.of(context).onSurface,
-                height: 0.6,
-              ),
-            ),
-          )
-        )
-      ),
-      Expanded(child: SingleChildScrollView(  // details of the selected
-        padding: const EdgeInsets.fromLTRB(15, 0, 12, 0),
-        child: ValueListenableBuilder(
-          valueListenable: _selected,
-          builder: (context, selected, _) => Column(children: [
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(_controller.enumerate(selected).name, style: TextStyle(
-                  color: ColorScheme.of(context).onSurfaceVariant,
-                  fontSize: 20
-                )),
-                Clickable(
-                  HoverEffect(
-                    inactiveCosmetic: BoxDecoration(
-                      color: ColorScheme.of(context).onPrimaryFixed,
-                      borderRadius: const BorderRadius.all(Radius.circular(3))
                     ),
-                    hoveringCosmetic: BoxDecoration(
-                      color: ColorScheme.of(context).primary,
-                      borderRadius: const BorderRadius.all(Radius.circular(3))
-                    ),
-                    align: const Alignment(.0, -0.1),
-                    height: 27,
-                    width: 72,
-                    child: Text("Analyze", style: TextStyle(
-                      fontSize: 13, color: Color(0xFFFFFFFF)
-                    )),
-                  ),
-                  onClick: () {
-                    final analyzer = _controller.enumerate(selected);
-                    _container.text = analyzer.name;
-                    try{
-                      if(analyzer.isVectorAnalyzer) {
-                        _container.content = _controller.vectorAnalysis(
-                          selected, _analysisCandidates.candidates, context
-                        );
-                      } else {
-                        final entries = _controller.scalarAnalysis(
-                          selected, _analysisCandidates.candidates, context
-                        );
-                        _container.content = ListView.separated(
-                          padding: EdgeInsets.all(0.0),
-                          itemCount: _analysisCandidates.length,
-                          itemBuilder: (context, i) => entries[i],
-                          separatorBuilder: (context, _) => Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 13),
-                            color: ColorScheme.of(context).onSurface,
-                            height: 0.6,
-                          ),
+                    onClick: () {
+                      final analyzer = _controller.enumerate(selected);
+                      _container.text = analyzer.name;
+                      try{
+                        if(analyzer.isVectorAnalyzer) {
+                          _container.content = _controller.vectorAnalysis(
+                            selected, _analysisCandidates.candidates, context
+                          );
+                        } else {
+                          final entries = _controller.scalarAnalysis(
+                            selected, _analysisCandidates.candidates, context
+                          );
+                          _container.content = ListView.separated(
+                            padding: EdgeInsets.all(0.0),
+                            itemCount: _analysisCandidates.length,
+                            itemBuilder: (context, i) => entries[i],
+                            separatorBuilder: (context, _) => Container(
+                              margin: const EdgeInsets.symmetric(horizontal: 13),
+                              color: ColorScheme.of(context).onSurface,
+                              height: 0.6,
+                            ),
+                          );
+                        }
+                      } catch(e, st) {
+                        FlutterPlatformAlert.showAlert(
+                          windowTitle: 'Analyzer reported an error: ${e.toString()}',
+                          text: st.toString(),
+                          iconStyle: IconStyle.error,
                         );
                       }
-                    } catch(e, st) {
-                      FlutterPlatformAlert.showAlert(
-                        windowTitle: 'Analyzer reported an error: ${e.toString()}',
-                        text: st.toString(),
-                        iconStyle: IconStyle.error,
-                      );
                     }
-                  }
+                  )
+                ]
+              ),
+              Container(
+                margin: const EdgeInsets.fromLTRB(0, 7, 0, 10),
+                color: ColorScheme.of(context).onSurface,
+                width: double.infinity,
+                height: 1,
+              ),
+              Align(
+                alignment: Alignment.topLeft,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: _controller.buildPanel(context)
                 )
-              ]
-            ),
-            Container(
-              margin: const EdgeInsets.fromLTRB(0, 7, 0, 10),
-              color: ColorScheme.of(context).onSurface,
-              width: double.infinity,
-              height: 1,
-            ),
-            Align(
-              alignment: Alignment.topLeft,
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: _controller.buildPanel(context)
               )
-            )
-          ])
-        )
-      )),
-    ],
+            ])
+          )
+        )),
+      ],
+    )
   );
 }
 

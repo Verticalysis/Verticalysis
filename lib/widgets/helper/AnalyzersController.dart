@@ -43,20 +43,25 @@ extension type AnalyzerInitializerRegistry._(
 }
 
 final class AnalyzersCotroller {
-  AnalyzersCotroller() {
-    updatePanel(0);
-  }
+  AnalyzersCotroller();
 
-  JsonWidgetData _panelBlueprint = JsonWidgetData.fromDynamic(
-    const { "type": "placeholder", "args": {} }
-  );
+  JsonWidgetData _panelBlueprint = _phonyPanel;
 
   Map<String, Object> options = {};
 
-  int get analyzers => _builtin.length;
+  final List<Analyzer> _applicable = [];
+
+  int filterApplicable(Iterable<AttrType> attributes) {
+    _applicable.clear();
+    _applicable.addAll(_builtin.where(
+      (analyzer) => analyzer.applicable(attributes))
+    );
+    if(_panelBlueprint == _phonyPanel) updatePanel(0);
+    return _applicable.length;
+  }
 
   /// don't make it static as we may load plugins as analyzers in the future
-  Analyzer enumerate(int index) => _builtin[index];
+  Analyzer enumerate(int index) => _applicable[index];
 
   int updatePanel(int index) {
     final analyzer = enumerate(index);
@@ -101,6 +106,10 @@ final class AnalyzersCotroller {
     ).build(context: ctx, registry: registry));
     return res;
   }
+
+  static final _phonyPanel = JsonWidgetData.fromDynamic(
+    const { "type": "placeholder", "args": {} }
+  );
 
   static const _builtin = [
     const NumericAnalyzer(),

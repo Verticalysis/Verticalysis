@@ -35,6 +35,10 @@ final class AnalysisCandidates extends ChangeNotifier {
     )
   );
 
+  Iterable<AttrType> get candidateTypes => _columns.map(
+    (candidate) => candidate.type
+  );
+
   AnalysisCandidate getCandidate(String column) => _columns.firstWhere(
     (candidate) => candidate.name == column
   );
