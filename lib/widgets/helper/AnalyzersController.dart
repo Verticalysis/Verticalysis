@@ -6,6 +6,7 @@
 import 'package:json_dynamic_widget/json_dynamic_widget.dart';
 
 import '../../domain/analysis/Analyzer.dart';
+import '../../domain/analysis/builtin/IntegerAnalyzer.dart';
 import '../../domain/analysis/builtin/NumericAnalyzer.dart';
 import '../../domain/analysis/builtin/RegressionAnalyzer.dart';
 import '../../domain/analysis/builtin/StatisticAnalyzer.dart';
@@ -112,6 +113,7 @@ final class AnalyzersCotroller {
   );
 
   static const _builtin = [
+    const IntegerAnalyzer(),
     const NumericAnalyzer(),
     const RegressionAnalyzer(),
     const StatisticAnalyzer(),

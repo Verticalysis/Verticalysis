@@ -124,6 +124,7 @@ extension type MultiColumn._(Blueprint blueprint) implements Blueprint {
     "type": "row",
     "args": {
       "spacing": hGap,
+      "crossAxisAlignment": "start",
       "children": [ for(final column in columns) {
         "type": "column",
         "args": {
