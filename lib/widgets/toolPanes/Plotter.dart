@@ -30,6 +30,7 @@ enum LineType {
 
 final class Plotter extends StatelessWidget {
   Plotter(MonitorModeController mmc, this._projectionsModel, this._pipelineModel) {
+    mmc.listen(Event.entriesUpdate, (_) => _plotterModel.forceUpdate());
     mmc.listen(Event.newTrace, (String attr) {
       _plotterModel.addTrace(attr);
     });
@@ -64,11 +65,19 @@ final class Plotter extends StatelessWidget {
       b: (color.b * 255).round()
     );
 
+    int points = _projectionsModel.currentLength;
+    int skip = 0;
+
+    if(_plotterModel.points case final int requested) if(points > requested) {
+      skip = points - requested;
+      points = requested;
+    }
+
     return charts.Series<int, num>(
       id: 'Primary',
-      data: Iota(_projectionsModel.currentLength),
-      domainFn: (index, _) => domain[index] ?? 0,
-      measureFn: (index, _) => measure[index],
+      data: Iota(points),
+      domainFn: (index, _) => domain[skip + index] ?? 0,
+      measureFn: (index, _) => measure[skip + index],
       colorFn: (_, _) => intColor
     );
   }
@@ -187,7 +196,10 @@ final class Plotter extends StatelessWidget {
                   contentPadding: const EdgeInsets.fromLTRB(3, 10, 3, 11),
                 ),
                 onSubmitted: (count) {
-
+                  final points = int.tryParse(count);
+                  if(points != null && points > 0) {
+                    _plotterModel.points = points;
+                  } // TODO: Notify the user the input is invalid
                 },
               )
             )
@@ -325,7 +337,12 @@ final class Plotter extends StatelessWidget {
               domainFn: (index, _) => 0,
               measureFn: (index, _) => 0,
               colorFn: (_, _) => charts.Color(r: 0, g: 0, b: 0, a: 0)
-          ) ], animate: true)
+            ) ],
+            domainAxis: const charts.NumericAxisSpec(
+              tickProviderSpec: charts.BasicNumericTickProviderSpec(zeroBound: false)
+            ),
+            animate: true,
+          )
         )
       ))
     ]))

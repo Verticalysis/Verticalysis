@@ -9,7 +9,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 
 final class PlotterModel extends ChangeNotifier {
-
+  int? _points = null;
   final traces = <String>[];
   final colors = <String, Color> {};
   final colorPalette = [
@@ -19,9 +19,18 @@ final class PlotterModel extends ChangeNotifier {
     Color(0xFF009A00),
   ];
 
+  int? get points => _points;
+
+  set points(int? pts) {
+    _points = pts;
+    notifyListeners();
+  }
+
   Color colorOf(String column) => colors[column]!;
 
-  void forceUpdate() => notifyListeners();
+  void forceUpdate() {
+    if(traces.isNotEmpty) notifyListeners();
+  }
 
   void addTrace(String column) {
     if(traces.contains(column)) return;
